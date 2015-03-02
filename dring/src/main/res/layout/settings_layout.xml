@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/settings_background"
+    android:orientation="vertical">
+
+    <CheckBox
+        android:id="@+id/cbEnabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10sp"
+        android:layout_marginTop="10sp"
+        android:button="@drawable/settings_feature"
+        android:scaleX="1.10"
+        android:scaleY="1.10"
+        android:textColor="#ffffff"
+        android:visibility="visible" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/lblRingerVolume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="10sp"
+            android:text="@string/RingerVolume"
+            android:textColor="#ffffff" />
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10sp"
+            android:layout_marginRight="5sp"
+            android:orientation="horizontal"
+            android:paddingTop="5sp">
+
+            <ImageView
+                android:id="@+id/RingerIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <SeekBar
+                android:id="@+id/seekBarRinger"
+                android:layout_width="300sp"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/RingerIcon"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/seekbar_progress_drawable"
+                android:secondaryProgress="0"
+                android:thumb="@drawable/seekbar_thumb_drawable" />
+
+        </RelativeLayout>
+
+        <CheckBox
+            android:id="@+id/cbVibrate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10sp"
+            android:layout_marginTop="10sp"
+            android:button="@drawable/vibrate_feature"
+            android:text="@string/vibrate"
+            android:textColor="#ffffff"
+            android:visibility="visible" />
+
+    </LinearLayout>
+</LinearLayout>
