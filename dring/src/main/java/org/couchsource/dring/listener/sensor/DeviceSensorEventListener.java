@@ -1,4 +1,4 @@
-package org.couchsource.dring.sensor.listener;
+package org.couchsource.dring.listener.sensor;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
