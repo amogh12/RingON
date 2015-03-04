@@ -1,4 +1,4 @@
-package org.couchsource.dring.receiver;
+package org.couchsource.dring.listener.phonestate;
 
 import android.content.Context;
 import android.os.Vibrator;
@@ -26,6 +26,18 @@ public class IncomingCallStateListener extends PhoneStateListener {
             contextWrapper = new AppContextWrapper(context);
         }
     }
+
+    public void register(){
+        TelephonyManager telephony = contextWrapper.getTelephonyService();
+        telephony.listen(this, PhoneStateListener.LISTEN_CALL_STATE);
+    }
+
+    public void unregisterReceiver(){
+        TelephonyManager telephony = contextWrapper.getTelephonyService();
+        telephony.listen(this, PhoneStateListener.LISTEN_NONE);
+    }
+
+
 
     @Override
     public void onCallStateChanged(int state, String incomingNumber) {

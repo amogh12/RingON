@@ -11,10 +11,10 @@ import android.util.Log;
 import org.couchsource.dring.application.AppContextWrapper;
 import org.couchsource.dring.application.DeviceProperty;
 import org.couchsource.dring.application.DeviceStatus;
-import org.couchsource.dring.receiver.TelephoneBroadcastReceiver;
-import org.couchsource.dring.sensor.listener.AccelerometerSensorListener;
-import org.couchsource.dring.sensor.listener.LightSensorListener;
-import org.couchsource.dring.sensor.listener.ProximitySensorListener;
+import org.couchsource.dring.listener.phonestate.IncomingCallStateListener;
+import org.couchsource.dring.listener.sensor.AccelerometerSensorListener;
+import org.couchsource.dring.listener.sensor.LightSensorListener;
+import org.couchsource.dring.listener.sensor.ProximitySensorListener;
 
 /**
  * Sticky service that registers Listeners for Accelerometer sensor, proximity sensor and light sensor
@@ -33,10 +33,10 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     private LightSensorListener mLightSensorListener;
     private ProximitySensorListener mProximitySensorListener;
     private DeviceStateListener deviceStateListener;
+    private IncomingCallStateListener phoneListener;
+    private SharedPreferences.OnSharedPreferenceChangeListener sharedPrefsListener;
     private volatile String currentDeviceStatus;
     private int countDownToLowPowerMode;
-    private SharedPreferences.OnSharedPreferenceChangeListener sharedPrefsListener;
-    private TelephoneBroadcastReceiver telephoneBroadcastReceiver;
 
     /**
      * Returns the current status of the service
@@ -64,6 +64,9 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         if (deviceStateListener == null) {
             deviceStateListener = new DeviceStateListener(this);
         }
+        if (phoneListener == null){
+            phoneListener = new IncomingCallStateListener(context);
+        }
         registerSensorListeners();
         registerSharedPrefsListener();
         flagServiceStatus(true);
@@ -74,6 +77,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     @Override
     public void onDestroy() {
         flagServiceStatus(false);
+        unregisterBroadcastReceiver();
         unregisterProximitySensor();
         unregisterAccelerometerAndLightSensors();
         unregisterSharedPrefsListener();
@@ -156,7 +160,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         registerProximitySensor();
     }
 
-    private void registerAccelerometerAndLightSensors() {
+    private synchronized void registerAccelerometerAndLightSensors() {
         if (!mIsAccelerometerAndLightSensorOn) {
             if (mAccelerometerSensorListener == null) {
                 mAccelerometerSensorListener = new AccelerometerSensorListener(context, deviceStateListener);
@@ -194,7 +198,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     }
 
     private void unregisterProximitySensor() {
-        mLightSensorListener.unregister();
+        mProximitySensorListener.unregister();
         mProximitySensorListener = null;
         Log.d(TAG, "ProximitySensorListener unregistered");
     }
@@ -222,10 +226,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
 
     private void registerBroadcastReceiver() {
         if (!isBroadcastReceiverRegistered) {
-            if (telephoneBroadcastReceiver == null) {
-                telephoneBroadcastReceiver = new TelephoneBroadcastReceiver(context);
-            }
-            telephoneBroadcastReceiver.register();
+            phoneListener.register();
             isBroadcastReceiverRegistered = true;
             Log.d(TAG, "Broadcast receiver successfully registered");
         }
@@ -234,10 +235,9 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     private void unregisterBroadcastReceiver() {
         if (isBroadcastReceiverRegistered) {
             isBroadcastReceiverRegistered = false;
-            if (telephoneBroadcastReceiver != null) {
-                telephoneBroadcastReceiver.unregisterReceiver();
-                Log.d(TAG, "Broadcast receiver successfully unregistered");
-            }
+            phoneListener.unregisterReceiver();
+            Log.d(TAG, "Broadcast receiver successfully unregistered");
+
         }
     }
 
