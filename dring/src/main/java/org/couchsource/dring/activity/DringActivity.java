@@ -70,6 +70,18 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.QuitApp:
+                finish();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
     private void toggleRingerService(boolean isChecked) {
         if (isChecked != SensorService.isServiceRunning()){
             if (isChecked){
