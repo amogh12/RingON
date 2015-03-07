@@ -32,7 +32,7 @@ public class IncomingCallStateListener extends PhoneStateListener {
         telephony.listen(this, PhoneStateListener.LISTEN_CALL_STATE);
     }
 
-    public void unregisterReceiver(){
+    public void unregister(){
         TelephonyManager telephony = contextWrapper.getTelephonyService();
         telephony.listen(this, PhoneStateListener.LISTEN_NONE);
     }
