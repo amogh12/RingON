@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.IBinder;
 import android.util.Log;
-
 import org.couchsource.dring.application.AppContextWrapper;
 import org.couchsource.dring.application.DeviceProperty;
 import org.couchsource.dring.application.DeviceStatus;
@@ -25,7 +24,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
 
 
     private static final String TAG = SensorService.class.getName();
-    private static boolean mIsServiceRunning = false;
+    private static volatile boolean mIsServiceRunning = false;
     private static boolean mIsAccelerometerAndLightSensorOn = false;
     private static boolean isBroadcastReceiverRegistered = false;
     private AppContextWrapper context;
@@ -35,7 +34,8 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     private DeviceStateListener deviceStateListener;
     private IncomingCallStateListener phoneListener;
     private SharedPreferences.OnSharedPreferenceChangeListener sharedPrefsListener;
-    private volatile String currentDeviceStatus;
+    private String currentDeviceStatus;
+    private final Object currentStatusLock = new Object();
     private int countDownToLowPowerMode;
 
     /**
@@ -43,7 +43,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
      *
      * @return boolean indicating whether the service is running or not
      */
-    public static synchronized boolean isServiceRunning() {
+    public static boolean isServiceRunning() {
         return mIsServiceRunning;
     }
 
@@ -64,7 +64,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         if (deviceStateListener == null) {
             deviceStateListener = new DeviceStateListener(this);
         }
-        if (phoneListener == null){
+        if (phoneListener == null) {
             phoneListener = new IncomingCallStateListener(context);
         }
         registerSensorListeners();
@@ -77,7 +77,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     @Override
     public void onDestroy() {
         flagServiceStatus(false);
-        unregisterBroadcastReceiver();
+        unregisterPhoneListener();
         unregisterProximitySensor();
         unregisterAccelerometerAndLightSensors();
         unregisterSharedPrefsListener();
@@ -88,19 +88,37 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
 
     @Override
     public void signalNewDevicePlacement(DeviceStatus deviceStatus) {
-        Log.d(TAG, "Signalled new device status " + deviceStatus);
-        if ((deviceStatus != null) && (deviceStatus.isStatusValid())) {
-            handleNewDevicePlacement(deviceStatus.name());
-        } else {
-            unregisterBroadcastReceiver();
-            resetCountdownToLowPowerMode();
+        if (!mIsServiceRunning){
+            return;
         }
-
+        Log.d(TAG, "Signalled new device status " + deviceStatus);
+        if (deviceStatus == null) {
+            unregisterPhoneListener();
+            resetCountdownToLowPowerMode();
+        } else {
+            synchronized (currentStatusLock) {
+                if (currentDeviceStatus != deviceStatus.name()) {
+                    currentDeviceStatus = deviceStatus.name();
+                    if (deviceStatus.isStatusValid()) {
+                        handleNewDevicePlacement(deviceStatus.name());
+                        resetCountdownToLowPowerMode();
+                    }
+                } else {
+                    if (deviceStatus.isStatusValid()) {
+                        if (attemptLowPowerMode()) {
+                            Log.d(TAG, "Switched off AccelerometerSensorListener and LightSensorListener with current status " + deviceStatus);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public void signalDeviceProximityChanged() {
-        exitLowPowerMode();
+        if (mIsServiceRunning) {
+            exitLowPowerMode();
+        }
     }
 
     @Override
@@ -109,29 +127,21 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     }
 
     private void handleNewDevicePlacement(String deviceStatus) {
-        if (currentDeviceStatus != deviceStatus) {
-            currentDeviceStatus = deviceStatus;
-            boolean isActive = context.getBooleanSharedPref(deviceStatus, DeviceProperty.ACTIVE.name(), false);
-            boolean doVibrate = false;
-            if (isActive) {
-                float ringerLevel = context.getFloatSharedPref(deviceStatus, DeviceProperty.RINGER.name(), 0);
-                doVibrate = context.getBooleanSharedPref(deviceStatus, DeviceProperty.VIBRATE.name(), false);
-                changeRingerLevel(ringerLevel);
-            }
-            if (doVibrate) {
-                registerBroadcastReceiver();
-            } else {
-                unregisterBroadcastReceiver();
-            }
-            resetCountdownToLowPowerMode();
+        boolean isActive = context.getBooleanSharedPref(deviceStatus, DeviceProperty.ACTIVE.name(), false);
+        boolean doVibrate = false;
+        if (isActive) {
+            float ringerLevel = context.getFloatSharedPref(deviceStatus, DeviceProperty.RINGER.name(), 0);
+            doVibrate = context.getBooleanSharedPref(deviceStatus, DeviceProperty.VIBRATE.name(), false);
+            changeRingerLevel(ringerLevel);
+        }
+        if (doVibrate) {
+            registerPhoneListener();
         } else {
-            if (attemptLowPowerMode()) {
-                Log.d(TAG, "Switched off AccelerometerSensorListener and LightSensorListener with current status " + deviceStatus);
-            }
+            unregisterPhoneListener();
         }
     }
 
-    private void resetCountdownToLowPowerMode() {
+    private synchronized void resetCountdownToLowPowerMode() {
         countDownToLowPowerMode = 10;
     }
 
@@ -141,18 +151,20 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
             return false;
         } else {
             unregisterAccelerometerAndLightSensors();
+            countDownToLowPowerMode = 10;
             return true;
         }
     }
 
     private void signalUserPreferenceChanged() {
-        currentDeviceStatus = null;
+        synchronized (currentStatusLock) {
+            currentDeviceStatus = null;
+        }
         exitLowPowerMode();
     }
 
     private void exitLowPowerMode() {
         registerAccelerometerAndLightSensors();
-        resetCountdownToLowPowerMode();
     }
 
     private void registerSensorListeners() {
@@ -224,20 +236,19 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         sharedPrefsListener = null;
     }
 
-    private void registerBroadcastReceiver() {
+    private void registerPhoneListener() {
         if (!isBroadcastReceiverRegistered) {
             phoneListener.register();
             isBroadcastReceiverRegistered = true;
-            Log.d(TAG, "Broadcast receiver successfully registered");
+            Log.d(TAG, "PhoneListener successfully registered");
         }
     }
 
-    private void unregisterBroadcastReceiver() {
+    private void unregisterPhoneListener() {
         if (isBroadcastReceiverRegistered) {
             isBroadcastReceiverRegistered = false;
-            phoneListener.unregisterReceiver();
-            Log.d(TAG, "Broadcast receiver successfully unregistered");
-
+            phoneListener.unregister();
+            Log.d(TAG, "PhoneListener successfully unregistered");
         }
     }
 
