@@ -32,11 +32,19 @@ import org.couchsource.dring.application.R;
 public class SettingsFragment extends Fragment {
 
     private static final String TAG = SettingsFragment.class.getName();
+    public static final float ENABLED = 1f;
+    public static final float DISABLED = 0.4f;
     private OnFragmentInteractionListener mListener;
     private DeviceStatus deviceStatus;
     private int ringerVolume;
     private boolean doVibrate;
     private boolean isFeatureActive;
+    private CheckBox cbEnabled;
+    private SeekBar mVolumeControl;
+    private View ringerIcon;
+    private View ringtoneLabel;
+    private CheckBox cbVibrateOnRing;
+
 
     /**
      * Do not use.
@@ -67,12 +75,14 @@ public class SettingsFragment extends Fragment {
             throw new IllegalArgumentException("phoneStatus is null or blank");
         }
         final View mView = inflater.inflate(R.layout.settings_layout, container, false);
-        final SeekBar mVolumeControl = (SeekBar) mView.findViewById(R.id.seekBarRinger);
+        mVolumeControl = (SeekBar) mView.findViewById(R.id.seekBarRinger);
+        ringerIcon =  mView.findViewById(R.id.RingerIcon);
+        ringtoneLabel =  mView.findViewById(R.id.lblRingerVolume);
         mVolumeControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 updateImage(seekBar, mView, R.id.RingerIcon, R.drawable.ic_action_ring_volume);
-                onRingerVolumeChanged(progress);
+                ringerVolume = progress;
             }
 
             @Override
@@ -89,16 +99,25 @@ public class SettingsFragment extends Fragment {
         updateImage(mVolumeControl, mView, R.id.RingerIcon, R.drawable.ic_action_ring_volume);
 
         doVibrate = mListener.getActivityContext().getBooleanSharedPref(deviceStatus.name(), DeviceProperty.VIBRATE.name(), false);
-        final CheckBox cbVibrateOnRing = (CheckBox) mView.findViewById(R.id.cbVibrate);
+        cbVibrateOnRing = (CheckBox) mView.findViewById(R.id.cbVibrate);
         cbVibrateOnRing.setChecked(doVibrate);
 
-        final CheckBox cbEnabled = (CheckBox) mView.findViewById(R.id.cbEnabled);
+        cbEnabled = (CheckBox) mView.findViewById(R.id.cbEnabled);
         cbEnabled.setText(DeviceStatusHelper.getResId(deviceStatus));
 
-        isFeatureActive = mListener.getActivityContext().getBooleanSharedPref(deviceStatus.name(), DeviceProperty.ACTIVE.name(), false);
+        isFeatureActive = mListener.getActivityContext().getBooleanSharedPref(deviceStatus.name(), DeviceProperty.ACTIVE.name(), true);
         cbEnabled.setChecked(isFeatureActive);
-        mVolumeControl.setEnabled(isFeatureActive);
-        cbVibrateOnRing.setEnabled(isFeatureActive);
+
+        setEnabledFragmentView(mListener.isServiceRunning());
+
+        cbEnabled.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isFeatureActive = isChecked;
+                setEnabledChildren(isChecked);
+                saveUserPreferences();
+            }
+        });
 
         cbVibrateOnRing.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
             @Override
@@ -108,36 +127,14 @@ public class SettingsFragment extends Fragment {
             }
         });
 
-        cbEnabled.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                toggleFeature(isChecked);
-                mVolumeControl.setEnabled(isChecked);
-                cbVibrateOnRing.setEnabled(isChecked);
-                saveUserPreferences();
-            }
-        });
         Log.d(TAG, "New view for phone status " + deviceStatus.name() + " created");
         return mView;
     }
 
-    private void updateImage(SeekBar seekBar, View mView, int ringerIcon, int ic_action_ring_volume) {
-        ImageView imageView = (ImageView) mView.findViewById(ringerIcon);
-        Drawable drawable;
-        if (seekBar.getProgress() == 0) {
-            drawable = getResources().getDrawable(R.drawable.ic_action_volume_muted);
-        } else {
-            drawable = getResources().getDrawable(ic_action_ring_volume);
-        }
-        imageView.setImageDrawable(drawable);
-    }
 
-    private void toggleFeature(boolean isChecked) {
-        this.isFeatureActive = isChecked;
-    }
-
-    private void onRingerVolumeChanged(int progress) {
-        this.ringerVolume = progress;
+    public void setEnabledFragmentView(boolean on) {
+       setEnabled(cbEnabled, on);
+       setEnabledChildren(isFeatureActive && on);
     }
 
     @Override
@@ -155,6 +152,33 @@ public class SettingsFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    private void setEnabledChildren(boolean isEnabled) {
+        setEnabled(mVolumeControl, isEnabled);
+        setEnabled(ringerIcon, isEnabled);
+        setEnabled(ringtoneLabel, isEnabled);
+        setEnabled(cbVibrateOnRing, isEnabled);
+    }
+
+    private void setEnabled(View view, boolean on) {
+        view.setEnabled(on);
+        if (on){
+            view.setAlpha(ENABLED);
+        }else{
+            view.setAlpha(DISABLED);
+        }
+    }
+
+    private void updateImage(SeekBar seekBar, View mView, int ringerIcon, int ic_action_ring_volume) {
+        ImageView imageView = (ImageView) mView.findViewById(ringerIcon);
+        Drawable drawable;
+        if (seekBar.getProgress() == 0) {
+            drawable = getResources().getDrawable(R.drawable.ic_action_volume_muted);
+        } else {
+            drawable = getResources().getDrawable(ic_action_ring_volume);
+        }
+        imageView.setImageDrawable(drawable);
     }
 
     private void saveUserPreferences() {
@@ -178,6 +202,7 @@ public class SettingsFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         public AppContextWrapper getActivityContext();
+        public boolean isServiceRunning();
     }
 
 

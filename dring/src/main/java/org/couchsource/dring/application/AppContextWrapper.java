@@ -11,6 +11,9 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.Telephony;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+
+import org.w3c.dom.Text;
 
 /**
  * author Kunal
@@ -55,6 +58,16 @@ public class AppContextWrapper extends ContextWrapper {
     public float getFloatSharedPref(String prefName, String key, float defaultVal) {
         SharedPreferences sharedPreferences = getSharedPreferences(prefName, Context.MODE_PRIVATE);
         return sharedPreferences.getFloat(key, defaultVal);
+    }
+
+    public void setBooleanSharedPref(String prefName, String key, boolean value){
+        if (TextUtils.isEmpty(prefName) || TextUtils.isEmpty(key)){
+            return;
+        }
+        SharedPreferences.Editor editor = getSharedPreferences(prefName, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(key, value);
+        editor.apply();
+
     }
 
 
