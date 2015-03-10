@@ -51,6 +51,16 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
         return activityContextWrapper;
     }
 
+    @Override
+    public boolean isFirstLaunch() {
+        return firstRun;
+    }
+
+    @Override
+    public boolean isRingerServiceRunning() {
+        return SensorService.isServiceRunning();
+    }
+
     private void decorateActionBar() {
         ActionBar actionBar = getActionBar();
         actionBar.setBackgroundDrawable(new ColorDrawable(R.string.action_bar_background));
@@ -87,11 +97,6 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
                 break;
         }
         return true;
-    }
-
-    @Override
-    public boolean isServiceRunning(){
-        return SensorService.isServiceRunning();
     }
 
     private void toggleRingerService(boolean isChecked) {

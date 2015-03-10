@@ -108,7 +108,11 @@ public class SettingsFragment extends Fragment {
         isFeatureActive = mListener.getActivityContext().getBooleanSharedPref(deviceStatus.name(), DeviceProperty.ACTIVE.name(), true);
         cbEnabled.setChecked(isFeatureActive);
 
-        setEnabledFragmentView(mListener.isServiceRunning());
+        if (mListener.isFirstLaunch()){
+            setEnabledFragmentView(true);
+        }else{
+            setEnabledFragmentView(mListener.isRingerServiceRunning());
+        }
 
         cbEnabled.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
             @Override
@@ -202,7 +206,8 @@ public class SettingsFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         public AppContextWrapper getActivityContext();
-        public boolean isServiceRunning();
+        public boolean isFirstLaunch();
+        public boolean isRingerServiceRunning();
     }
 
 
