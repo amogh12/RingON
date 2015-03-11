@@ -6,17 +6,17 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <FrameLayout
-            android:id="@+id/Frame1"
+            android:id="@+id/FaceUpSettingFrame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"/>
         <FrameLayout
-            android:id="@+id/Frame2"
+            android:id="@+id/FaceDownSettingFrame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"/>
         <FrameLayout
-            android:id="@+id/Frame3"
+            android:id="@+id/InPocketSettingFrame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"/>
