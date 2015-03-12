@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 
 import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DeviceProperty;
 import org.couchsource.dring.application.DeviceStatus;
 import org.couchsource.dring.application.DeviceStatusHelper;
@@ -29,7 +30,7 @@ import org.couchsource.dring.application.R;
  * {@link SettingsFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
  */
-public class SettingsFragment extends Fragment {
+public class SettingsFragment extends Fragment implements Constants {
 
     private static final String TAG = SettingsFragment.class.getName();
     public static final float ENABLED = 1f;
