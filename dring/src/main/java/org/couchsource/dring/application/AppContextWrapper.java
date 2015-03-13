@@ -16,7 +16,8 @@ import android.text.TextUtils;
 import org.w3c.dom.Text;
 
 /**
- * author Kunal
+ * Wrapper class over Context
+ * author Kunal Sanghavi
  */
 public class AppContextWrapper extends ContextWrapper {
     private static final String TAG = AppContextWrapper.class.getName();
@@ -69,6 +70,4 @@ public class AppContextWrapper extends ContextWrapper {
         editor.apply();
 
     }
-
-
 }

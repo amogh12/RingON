@@ -10,7 +10,7 @@ import android.util.Log;
 import org.couchsource.dring.application.AppContextWrapper;
 import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DeviceProperty;
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
 import org.couchsource.dring.listener.phonestate.IncomingCallStateListener;
 import org.couchsource.dring.listener.sensor.AccelerometerSensorListener;
 import org.couchsource.dring.listener.sensor.LightSensorListener;
@@ -71,7 +71,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         registerSensorListeners();
         registerSharedPrefsListener();
         flagServiceStatus(true);
-        context.setBooleanSharedPref(RING_ON,SENSOR_SERVICE_ON,true);
+        context.setBooleanSharedPref(RING_ON, SENSOR_SERVICE_ON, true);
         Log.d(TAG, "Service Started");
         return START_STICKY;
     }
@@ -90,26 +90,26 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     }
 
     @Override
-    public void signalNewDevicePlacement(DeviceStatus deviceStatus) {
+    public void signalNewDevicePlacement(DevicePosition devicePosition) {
         if (!mIsServiceRunning){
             return;
         }
-        Log.d(TAG, "Signalled new device status " + deviceStatus);
-        if (deviceStatus == null) {
+        Log.d(TAG, "Signalled new device status " + devicePosition);
+        if (devicePosition == null) {
             unregisterPhoneListener();
             resetCountdownToLowPowerMode();
         } else {
             synchronized (currentStatusLock) {
-                if (currentDeviceStatus != deviceStatus.name()) {
-                    currentDeviceStatus = deviceStatus.name();
-                    if (deviceStatus.isStatusValid()) {
-                        handleNewDevicePlacement(deviceStatus.name());
+                if (currentDeviceStatus != devicePosition.name()) {
+                    currentDeviceStatus = devicePosition.name();
+                    if (devicePosition.isStatusValid()) {
+                        handleNewDevicePlacement(devicePosition.name());
                         resetCountdownToLowPowerMode();
                     }
                 } else {
-                    if (deviceStatus.isStatusValid()) {
+                    if (devicePosition.isStatusValid()) {
                         if (attemptLowPowerMode()) {
-                            Log.d(TAG, "Switched off AccelerometerSensorListener and LightSensorListener with current status " + deviceStatus);
+                            Log.d(TAG, "Switched off AccelerometerSensorListener and LightSensorListener with current status " + devicePosition);
                         }
                     }
                 }
@@ -227,14 +227,14 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
                     }
                 };
 
-        for (DeviceStatus deviceStatus : DeviceStatus.getAllUserPreferences()) {
-            context.getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(sharedPrefsListener);
+        for (DevicePosition devicePosition : DevicePosition.getAllUserPreferences()) {
+            context.getSharedPreferences(devicePosition.name(), Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(sharedPrefsListener);
         }
     }
 
     private void unregisterSharedPrefsListener() {
-        for (DeviceStatus deviceStatus : DeviceStatus.getAllUserPreferences()) {
-            context.getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(sharedPrefsListener);
+        for (DevicePosition devicePosition : DevicePosition.getAllUserPreferences()) {
+            context.getSharedPreferences(devicePosition.name(), Context.MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(sharedPrefsListener);
         }
         sharedPrefsListener = null;
     }

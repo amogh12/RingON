@@ -1,11 +1,9 @@
 package org.couchsource.dring.service;
 
-import android.content.Context;
-import android.os.PowerManager;
 import android.util.Log;
 
 import org.couchsource.dring.application.model.Device;
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
 
 /**
  * StatusManager registers new status of the device.
@@ -114,13 +112,13 @@ public class DeviceStateListener {
     }
 
     private void examineDeviceStatus() {
-        DeviceStatus deviceStatus = device.getCurrentStatus();
+        DevicePosition devicePosition = device.getCurrentPosition();
         //Avoiding false positives
-        if ((deviceStatus == DeviceStatus.IN_POCKET) && (!deviceStateListenerCallback.getContext().isAudioNormalMode())) {
+        if ((devicePosition == DevicePosition.IN_POCKET) && (!deviceStateListenerCallback.getContext().isAudioNormalMode())) {
             return;
         }
-        deviceStateListenerCallback.signalNewDevicePlacement(deviceStatus);
-        Log.d(TAG, "Registered Device status " + deviceStatus);
+        deviceStateListenerCallback.signalNewDevicePlacement(devicePosition);
+        Log.d(TAG, "Registered Device status " + devicePosition);
 
     }
 }

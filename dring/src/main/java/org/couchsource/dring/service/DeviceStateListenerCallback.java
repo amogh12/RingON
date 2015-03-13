@@ -1,14 +1,14 @@
 package org.couchsource.dring.service;
 
 import org.couchsource.dring.application.AppContextWrapper;
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
 
 /**
  * author Kunal
  */
 public interface DeviceStateListenerCallback {
 
-  public void signalNewDevicePlacement(DeviceStatus deviceStatus);
+  public void signalNewDevicePlacement(DevicePosition devicePosition);
 
   public void signalDeviceProximityChanged();
 

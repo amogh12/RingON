@@ -9,7 +9,7 @@ import java.util.Collections;
  * Enum for all device positions detected by this app
  * @author Kunal Sanghavi
  */
-public enum DeviceStatus {
+public enum DevicePosition {
 
     FACE_UP("FACE_UP", true),
     FACE_DOWN("FACE_DOWN", true),
@@ -20,7 +20,7 @@ public enum DeviceStatus {
 
     private final boolean userPreference;
 
-    DeviceStatus(String label, boolean userPreference){
+    DevicePosition(String label, boolean userPreference){
         this.label = label;
         this.userPreference = userPreference;
     }
@@ -34,23 +34,23 @@ public enum DeviceStatus {
      * @param label required PhoneStatus in String form
      * @return PhoneStatus
      */
-    public static DeviceStatus phoneStatusFromLabel(String label){
+    public static DevicePosition positionFromLabel(String label){
         if (TextUtils.isEmpty(label)){
             return null;
         }
-        for (DeviceStatus deviceStatus : DeviceStatus.values()){
-            if (deviceStatus.getLabel().equalsIgnoreCase(label)){
-                return deviceStatus;
+        for (DevicePosition devicePosition : DevicePosition.values()){
+            if (devicePosition.getLabel().equalsIgnoreCase(label)){
+                return devicePosition;
             }
         }
         return null;
     }
 
-    public static Collection<DeviceStatus> getAllUserPreferences(){
-        Collection<DeviceStatus> deviceStatuses = new ArrayList<>();
-        for (DeviceStatus deviceStatus : DeviceStatus.values()){
-            if (deviceStatus.userPreference){
-                deviceStatuses.add(deviceStatus);
+    public static Collection<DevicePosition> getAllUserPreferences(){
+        Collection<DevicePosition> deviceStatuses = new ArrayList<>();
+        for (DevicePosition devicePosition : DevicePosition.values()){
+            if (devicePosition.userPreference){
+                deviceStatuses.add(devicePosition);
             }
         }
         return Collections.unmodifiableCollection(deviceStatuses);

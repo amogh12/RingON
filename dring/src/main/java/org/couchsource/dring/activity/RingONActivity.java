@@ -14,17 +14,23 @@ import android.widget.ToggleButton;
 
 import org.couchsource.dring.application.AppContextWrapper;
 import org.couchsource.dring.application.Constants;
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
 import org.couchsource.dring.application.R;
 import org.couchsource.dring.legal.DringDisclaimer;
 import org.couchsource.dring.service.SensorService;
 
+/**
+ * Main Activity of RingON. It manages 3 fragments for Face up, Face Down and In-pocket positions.
+ * It also handles the main toggle switch that turns ON/OFF the Sensor Service.
+ * @author Kunal Sanghavi
+ *
+ */
+public class RingONActivity extends Activity implements SettingsFragment.OnFragmentInteractionListener, Constants {
 
-public class DringActivity extends Activity implements SettingsFragment.OnFragmentInteractionListener, Constants {
-
-    private static final String TAG = DringActivity.class.getName();
+    private static final String TAG = RingONActivity.class.getName();
     private AppContextWrapper activityContextWrapper;
     private boolean firstRun = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,16 +39,15 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-            fragmentTransaction.add(R.id.FaceUpSettingFrame, SettingsFragment.newInstance(DeviceStatus.FACE_UP.name()));
-            Log.d(TAG,"Fragment "+ DeviceStatus.FACE_UP.name()+" added");
-            fragmentTransaction.add(R.id.FaceDownSettingFrame, SettingsFragment.newInstance(DeviceStatus.FACE_DOWN.name()));
-            Log.d(TAG,"Fragment "+ DeviceStatus.FACE_DOWN.name()+" added");
-            fragmentTransaction.add(R.id.InPocketSettingFrame, SettingsFragment.newInstance(DeviceStatus.IN_POCKET.name()));
-            Log.d(TAG,"Fragment "+ DeviceStatus.IN_POCKET.name()+" added");
+            fragmentTransaction.add(R.id.FaceUpSettingFrame, SettingsFragment.newInstance(DevicePosition.FACE_UP.name()));
+            Log.d(TAG,"Fragment "+ DevicePosition.FACE_UP.name()+" added");
+            fragmentTransaction.add(R.id.FaceDownSettingFrame, SettingsFragment.newInstance(DevicePosition.FACE_DOWN.name()));
+            Log.d(TAG,"Fragment "+ DevicePosition.FACE_DOWN.name()+" added");
+            fragmentTransaction.add(R.id.InPocketSettingFrame, SettingsFragment.newInstance(DevicePosition.IN_POCKET.name()));
+            Log.d(TAG,"Fragment "+ DevicePosition.IN_POCKET.name()+" added");
             fragmentTransaction.commit();
         }
         firstRun = activityContextWrapper.getBooleanSharedPref(RING_ON, FIRST_RUN, true);
-
         Log.d(TAG,"Activity created. Running for the first time? "+firstRun);
     }
 
@@ -57,13 +62,8 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
     }
 
     @Override
-    public boolean isRingerServiceRunning() {
+    public boolean isSensorServiceRunning() {
         return SensorService.isServiceRunning();
-    }
-
-    private void decorateActionBar() {
-        ActionBar actionBar = getActionBar();
-        actionBar.setBackgroundDrawable(new ColorDrawable(R.string.action_bar_background));
     }
 
     @Override
@@ -99,6 +99,15 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
         return true;
     }
 
+    @Override
+    protected void onResume(){
+        super.onResume();
+        if (firstRun) {
+            activityContextWrapper.setBooleanSharedPref(RING_ON, FIRST_RUN, false);
+        }
+        new DringDisclaimer(this).show();
+    }
+
     private void toggleRingerService(boolean isChecked) {
         if (isChecked != SensorService.isServiceRunning()){
             if (isChecked){
@@ -110,6 +119,11 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
         }
     }
 
+    private void decorateActionBar() {
+        ActionBar actionBar = getActionBar();
+        actionBar.setBackgroundDrawable(new ColorDrawable(R.string.action_bar_background));
+    }
+
     private void toggleFragmentControls(boolean on) {
         getFragmentById(R.id.FaceUpSettingFrame).setEnabledFragmentView(on);
         getFragmentById(R.id.FaceDownSettingFrame).setEnabledFragmentView(on);
@@ -118,15 +132,6 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
 
     private SettingsFragment getFragmentById(int id) {
         return (SettingsFragment) getFragmentManager().findFragmentById(id);
-    }
-
-    @Override
-    protected void onResume(){
-        super.onResume();
-        if (firstRun) {
-            activityContextWrapper.setBooleanSharedPref(RING_ON, FIRST_RUN, false);
-        }
-        new DringDisclaimer(this).show();
     }
 
     private void startRingerService() {
