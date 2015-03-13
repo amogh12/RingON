@@ -41,7 +41,7 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
             Log.d(TAG,"Fragment "+ DeviceStatus.IN_POCKET.name()+" added");
             fragmentTransaction.commit();
         }
-        firstRun = activityContextWrapper.getBooleanSharedPref(RING_ON, "first_run", true);
+        firstRun = activityContextWrapper.getBooleanSharedPref(RING_ON, FIRST_RUN, true);
 
         Log.d(TAG,"Activity created. Running for the first time? "+firstRun);
     }
@@ -124,7 +124,7 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
     protected void onResume(){
         super.onResume();
         if (firstRun) {
-            activityContextWrapper.setBooleanSharedPref(RING_ON, "first_run", false);
+            activityContextWrapper.setBooleanSharedPref(RING_ON, FIRST_RUN, false);
         }
         new DringDisclaimer(this).show();
     }
@@ -132,7 +132,7 @@ public class DringActivity extends Activity implements SettingsFragment.OnFragme
     private void startRingerService() {
         Intent intent= new Intent(this, SensorService.class);
         this.startService(intent);
-        Log.i(TAG, "Service Started");
+        Log.i(TAG, "Service Start Requested");
     }
 
     private void stopRingerService(){

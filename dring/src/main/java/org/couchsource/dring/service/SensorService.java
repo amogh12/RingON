@@ -8,6 +8,7 @@ import android.media.AudioManager;
 import android.os.IBinder;
 import android.util.Log;
 import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DeviceProperty;
 import org.couchsource.dring.application.DeviceStatus;
 import org.couchsource.dring.listener.phonestate.IncomingCallStateListener;
@@ -20,7 +21,7 @@ import org.couchsource.dring.listener.sensor.ProximitySensorListener;
  *
  * @author Kunal Sanghavi
  */
-public class SensorService extends Service implements DeviceStateListenerCallback {
+public class SensorService extends Service implements DeviceStateListenerCallback, Constants {
 
 
     private static final String TAG = SensorService.class.getName();
@@ -70,12 +71,14 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         registerSensorListeners();
         registerSharedPrefsListener();
         flagServiceStatus(true);
+        context.setBooleanSharedPref(RING_ON,SENSOR_SERVICE_ON,true);
         Log.d(TAG, "Service Started");
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        context.setBooleanSharedPref(RING_ON,SENSOR_SERVICE_ON,false);
         flagServiceStatus(false);
         unregisterPhoneListener();
         unregisterProximitySensor();
@@ -225,13 +228,13 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
                 };
 
         for (DeviceStatus deviceStatus : DeviceStatus.getAllUserPreferences()) {
-            getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(sharedPrefsListener);
+            context.getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(sharedPrefsListener);
         }
     }
 
     private void unregisterSharedPrefsListener() {
         for (DeviceStatus deviceStatus : DeviceStatus.getAllUserPreferences()) {
-            getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(sharedPrefsListener);
+            context.getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(sharedPrefsListener);
         }
         sharedPrefsListener = null;
     }
