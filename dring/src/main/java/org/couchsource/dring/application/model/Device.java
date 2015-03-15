@@ -3,7 +3,7 @@ package org.couchsource.dring.application.model;
 import org.couchsource.dring.application.DevicePosition;
 
 /**
- * A bean that registers all sensor readings and spits out current position of the device.
+ * A bean that registers all sensor readings and gives out current position of the device.
  *
  * @author Kunal Sanghavi
  */
@@ -86,7 +86,7 @@ public class Device {
 
         if (isFaceUp()) {
             return (DevicePosition.FACE_UP);
-        } else if (isFaceDown() && isCloseProximity()) {
+        } else if (isFaceDown()) {
             return (DevicePosition.FACE_DOWN);
         } else if (isDark() && isCloseProximity()
                 && (!isFaceDown()) && (!isFaceUp())) {

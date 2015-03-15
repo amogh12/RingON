@@ -7,6 +7,7 @@ import java.util.Collections;
 
 /**
  * Enum for all device positions detected by this app
+ *
  * @author Kunal Sanghavi
  */
 public enum DevicePosition {
@@ -18,11 +19,11 @@ public enum DevicePosition {
 
     private final String label;
 
-    private final boolean userPreference;
+    private final boolean userPreferred;
 
-    DevicePosition(String label, boolean userPreference){
+    DevicePosition(String label, boolean userPreferred){
         this.label = label;
-        this.userPreference = userPreference;
+        this.userPreferred = userPreferred;
     }
 
     public String getLabel(){
@@ -30,9 +31,9 @@ public enum DevicePosition {
     }
 
     /**
-     * Returns the PhoneStatus enum from its label
-     * @param label required PhoneStatus in String form
-     * @return PhoneStatus
+     * Returns the {@link org.couchsource.dring.application.DevicePosition} enum from its label
+     * @param label required Device Position in String
+     * @return {@link org.couchsource.dring.application.DevicePosition}
      */
     public static DevicePosition positionFromLabel(String label){
         if (TextUtils.isEmpty(label)){
@@ -46,18 +47,29 @@ public enum DevicePosition {
         return null;
     }
 
-    public static Collection<DevicePosition> getAllUserPreferences(){
+    public static boolean isDevicePositionValid(String position){
+        DevicePosition devicePosition = positionFromLabel(position);
+        if (devicePosition == null){
+            return false;
+        }
+        if (devicePosition.isUserPreferredPosition()){
+            return true;
+        }
+        return false;
+    }
+
+    public static Collection<DevicePosition> getAllUserPreferredPositions(){
         Collection<DevicePosition> deviceStatuses = new ArrayList<>();
         for (DevicePosition devicePosition : DevicePosition.values()){
-            if (devicePosition.userPreference){
+            if (devicePosition.userPreferred){
                 deviceStatuses.add(devicePosition);
             }
         }
         return Collections.unmodifiableCollection(deviceStatuses);
     }
 
-    public boolean isStatusValid(){
-        if (this.userPreference){
+    public boolean isUserPreferredPosition(){
+        if (this.userPreferred){
             return true;
         }
         return false;

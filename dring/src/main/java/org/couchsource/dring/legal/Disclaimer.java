@@ -14,12 +14,12 @@ import org.couchsource.dring.application.R;
  * Disclaimer for the app. Copied from: http://www.donnfelker.com/android-a-simple-eula-for-your-android-apps/
  */
 
-public class DringDisclaimer {
+public class Disclaimer {
 
     private String EULA_PREFIX = "eula_";
     private Activity mActivity;
 
-    public DringDisclaimer(Activity context) {
+    public Disclaimer(Activity context) {
         mActivity = context;
     }
 

@@ -3,14 +3,15 @@ package org.couchsource.dring.listener.sensor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
-import org.couchsource.dring.application.AppContextWrapper;
 import org.couchsource.dring.application.Constants;
-import org.couchsource.dring.service.DeviceStateListener;
+import org.couchsource.dring.service.SensorEventsAggregator;
 
 import static java.lang.Math.sqrt;
 
 /**
- * author Kunal
+ * Listener to the Accelerometer Sensor.
+ *
+ * author Kunal Sanghavi
  */
 public class AccelerometerSensorListener extends DeviceSensorEventListener implements Constants {
 
@@ -22,11 +23,16 @@ public class AccelerometerSensorListener extends DeviceSensorEventListener imple
     private long mLastUpdate;
 
 
-    public AccelerometerSensorListener(AppContextWrapper contextWrapper, DeviceStateListener deviceStateListener) {
-        super(contextWrapper,deviceStateListener);
+    /**
+     * Creates a new instance of the listener
+     * @param sensorEventsAggregator required {@link org.couchsource.dring.service.SensorEventsAggregator}
+     */
+    public AccelerometerSensorListener(SensorEventsAggregator sensorEventsAggregator) {
+        super(sensorEventsAggregator);
     }
 
 
+    @Override
     public void register(){
         super.register(Sensor.TYPE_ACCELEROMETER);
     }
@@ -79,11 +85,11 @@ public class AccelerometerSensorListener extends DeviceSensorEventListener imple
             mFilteredValues[Z] = lowPass(rawZ, mFilteredValues[Z]);
 
             if (isFaceUp(mFilteredValues)) {
-                getDeviceStateListener().registerFaceUp();
+                getSensorEventsAggregator().registerFaceUp();
             } else if (isFaceDown(mFilteredValues)) {
-                getDeviceStateListener().registerFaceDown();
+                getSensorEventsAggregator().registerFaceDown();
             } else {
-                getDeviceStateListener().registerNeitherFaceUpNorFaceDown();
+                getSensorEventsAggregator().registerNeitherFaceUpNorFaceDown();
             }
         }
     }

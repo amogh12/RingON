@@ -2,31 +2,41 @@ package org.couchsource.dring.service;
 
 import android.util.Log;
 
+import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.model.Device;
 import org.couchsource.dring.application.DevicePosition;
 
 /**
- * StatusManager registers new status of the device.
+ * Aggregates all events from Accelerometer, Light and Proximity Sensors
+ * and informs the SensorService of new device positions
  *
  * @author Kunal Sanghavi
  */
-public class DeviceStateListener {
+public class SensorEventsAggregator {
 
-    private static final String TAG = DeviceStateListener.class.getName();
-    //Accelerometer readings
+    private static final String TAG = SensorEventsAggregator.class.getName();
     private static final int MAX_DELAY_COUNT = 3;
     private final Device device;
-    private final DeviceStateListenerCallback deviceStateListenerCallback;
+    private final SensorEventsAggregatorCallback sensorEventsAggregatorCallback;
     private Integer faceUpDelayCounter = 0;
     private Integer faceDownDelayCounter = 0;
     private Integer unknownPositionCounter = 0;
 
-    public DeviceStateListener(DeviceStateListenerCallback deviceStateListenerCallback) {
-        if (deviceStateListenerCallback == null) {
-            throw new IllegalArgumentException("deviceStateListenerCallback found null");
+    /**
+     * Create a new SensorEventAggregator
+     *
+     * @param sensorEventsAggregatorCallback required Callback to SensorService
+     */
+    public SensorEventsAggregator(SensorEventsAggregatorCallback sensorEventsAggregatorCallback) {
+        if (sensorEventsAggregatorCallback == null) {
+            throw new IllegalArgumentException("sensorEventsAggregatorCallback found null");
         }
-        this.deviceStateListenerCallback = deviceStateListenerCallback;
+        this.sensorEventsAggregatorCallback = sensorEventsAggregatorCallback;
         this.device = new Device();
+    }
+
+    public ApplicationContextWrapper getContext(){
+        return sensorEventsAggregatorCallback.getContext();
     }
 
     /**
@@ -85,7 +95,7 @@ public class DeviceStateListener {
      */
     public synchronized void registerCloseProximity() {
             device.registerCloseProximity();
-            deviceStateListenerCallback.signalDeviceProximityChanged();
+            sensorEventsAggregatorCallback.signalDeviceProximityChanged();
 
     }
 
@@ -94,7 +104,7 @@ public class DeviceStateListener {
      */
     public synchronized void registerDistantProximity() {
         device.registerDistantProximity();
-        deviceStateListenerCallback.signalDeviceProximityChanged();
+        sensorEventsAggregatorCallback.signalDeviceProximityChanged();
     }
 
     /**
@@ -114,10 +124,10 @@ public class DeviceStateListener {
     private void examineDeviceStatus() {
         DevicePosition devicePosition = device.getCurrentPosition();
         //Avoiding false positives
-        if ((devicePosition == DevicePosition.IN_POCKET) && (!deviceStateListenerCallback.getContext().isAudioNormalMode())) {
+        if ((devicePosition == DevicePosition.IN_POCKET) && (!sensorEventsAggregatorCallback.getContext().isAudioNormalMode())) {
             return;
         }
-        deviceStateListenerCallback.signalNewDevicePlacement(devicePosition);
+        sensorEventsAggregatorCallback.signalNewPosition(devicePosition);
         Log.d(TAG, "Registered Device status " + devicePosition);
 
     }

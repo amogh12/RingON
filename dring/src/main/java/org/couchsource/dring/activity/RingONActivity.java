@@ -12,29 +12,30 @@ import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
-import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DevicePosition;
 import org.couchsource.dring.application.R;
-import org.couchsource.dring.legal.DringDisclaimer;
+import org.couchsource.dring.legal.Disclaimer;
 import org.couchsource.dring.service.SensorService;
 
 /**
  * Main Activity of RingON. It manages 3 fragments for Face up, Face Down and In-pocket positions.
  * It also handles the main toggle switch that turns ON/OFF the Sensor Service.
+ *
  * @author Kunal Sanghavi
  *
  */
 public class RingONActivity extends Activity implements SettingsFragment.OnFragmentInteractionListener, Constants {
 
     private static final String TAG = RingONActivity.class.getName();
-    private AppContextWrapper activityContextWrapper;
+    private ApplicationContextWrapper context;
     private boolean firstRun = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activityContextWrapper = new AppContextWrapper(this);
+        context = new ApplicationContextWrapper(this);
         decorateActionBar();
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
@@ -47,13 +48,13 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
             Log.d(TAG,"Fragment "+ DevicePosition.IN_POCKET.name()+" added");
             fragmentTransaction.commit();
         }
-        firstRun = activityContextWrapper.getBooleanSharedPref(RING_ON, FIRST_RUN, true);
+        firstRun = context.getBooleanPreference(RING_ON, FIRST_RUN, true);
         Log.d(TAG,"Activity created. Running for the first time? "+firstRun);
     }
 
     @Override
-    public AppContextWrapper getActivityContext(){
-        return activityContextWrapper;
+    public ApplicationContextWrapper getActivityContext(){
+        return context;
     }
 
     @Override
@@ -103,9 +104,9 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
     protected void onResume(){
         super.onResume();
         if (firstRun) {
-            activityContextWrapper.setBooleanSharedPref(RING_ON, FIRST_RUN, false);
+            context.setBooleanPreference(RING_ON, FIRST_RUN, false);
         }
-        new DringDisclaimer(this).show();
+        new Disclaimer(this).show();
     }
 
     private void toggleRingerService(boolean isChecked) {

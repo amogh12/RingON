@@ -1,8 +1,6 @@
 package org.couchsource.dring.activity;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -16,7 +14,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 
-import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DeviceProperty;
 import org.couchsource.dring.application.DevicePosition;
@@ -39,7 +37,7 @@ public class SettingsFragment extends Fragment implements Constants {
     public static final float ENABLED = 1f;
     public static final float DISABLED = 0.4f;
     private OnFragmentInteractionListener mListener;
-    private DevicePosition devicePosition;
+    private String devicePosition;
     private int ringerVolume;
     private boolean doVibrate;
     private boolean isFeatureActive;
@@ -77,10 +75,11 @@ public class SettingsFragment extends Fragment implements Constants {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              final Bundle savedInstanceState) {
 
-        devicePosition = DevicePosition.positionFromLabel((String) getArguments().get("devicePosition"));
-        if (devicePosition == null) {
-            throw new IllegalArgumentException("devicePosition is null or blank");
+        devicePosition = (String) getArguments().get("devicePosition");
+        if (!DevicePosition.isDevicePositionValid(devicePosition)){
+            throw new IllegalArgumentException("Invalid device position detected "+ devicePosition);
         }
+
         final View mView = inflater.inflate(R.layout.settings_layout, container, false);
         sbVolumeControl = (SeekBar) mView.findViewById(R.id.seekBarRinger);
         ringerIcon =  mView.findViewById(R.id.RingerIcon);
@@ -98,21 +97,21 @@ public class SettingsFragment extends Fragment implements Constants {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                saveUserPreferences();
+                saveRingerVolume();
             }
         });
-        ringerVolume = (int)mListener.getActivityContext().getFloatSharedPref(devicePosition.name(), DeviceProperty.RINGER.name(), 50.0f);
+        ringerVolume = (int)mListener.getActivityContext().getFloatPreference(devicePosition, DeviceProperty.RINGER.name(), 50.0f);
         sbVolumeControl.setProgress(ringerVolume);
         updateImage(sbVolumeControl, mView, R.id.RingerIcon, R.drawable.ic_action_ring_volume);
 
-        doVibrate = mListener.getActivityContext().getBooleanSharedPref(devicePosition.name(), DeviceProperty.VIBRATE.name(), false);
+        doVibrate = mListener.getActivityContext().getBooleanPreference(devicePosition, DeviceProperty.VIBRATE.name(), false);
         cbVibrateOnRing = (CheckBox) mView.findViewById(R.id.cbVibrate);
         cbVibrateOnRing.setChecked(doVibrate);
 
         cbEnabled = (CheckBox) mView.findViewById(R.id.cbEnabled);
         cbEnabled.setText(DeviceStatusHelper.getResId(devicePosition));
 
-        isFeatureActive = mListener.getActivityContext().getBooleanSharedPref(devicePosition.name(), DeviceProperty.ACTIVE.name(), true);
+        isFeatureActive = mListener.getActivityContext().getBooleanPreference(devicePosition, DeviceProperty.ACTIVE.name(), true);
         cbEnabled.setChecked(isFeatureActive);
 
         if (mListener.isFirstLaunch()){
@@ -126,7 +125,7 @@ public class SettingsFragment extends Fragment implements Constants {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 isFeatureActive = isChecked;
                 setEnabledChildren(isChecked);
-                saveUserPreferences();
+                saveFeatureActivePreference();
             }
         });
 
@@ -134,11 +133,11 @@ public class SettingsFragment extends Fragment implements Constants {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 doVibrate = isChecked;
-                saveUserPreferences();
+                saveVibratePreference();
             }
         });
 
-        Log.d(TAG, "New view for phone status " + devicePosition.name() + " created");
+        Log.d(TAG, "New view for phone status " + devicePosition + " created");
         return mView;
     }
 
@@ -195,13 +194,16 @@ public class SettingsFragment extends Fragment implements Constants {
         imageView.setImageDrawable(drawable);
     }
 
-    private void saveUserPreferences() {
-        SharedPreferences.Editor editor = mListener.getActivityContext().getSharedPreferences(devicePosition.name(), Context.MODE_PRIVATE).edit();
-        editor.putBoolean(DeviceProperty.ACTIVE.name(), isFeatureActive);
-        editor.putFloat(DeviceProperty.RINGER.name(), ringerVolume);
-        editor.putBoolean(DeviceProperty.VIBRATE.name(), doVibrate);
-        editor.apply();
-        Log.d(TAG, "User pref for " + devicePosition.name() + " saved!");
+    private void saveRingerVolume(){
+        mListener.getActivityContext().setFloatPreference(devicePosition, DeviceProperty.RINGER.name(), ringerVolume);
+    }
+
+    private void saveFeatureActivePreference(){
+        mListener.getActivityContext().setBooleanPreference(devicePosition, DeviceProperty.ACTIVE.name(), isFeatureActive);
+    }
+
+    private void saveVibratePreference(){
+        mListener.getActivityContext().setBooleanPreference(devicePosition, DeviceProperty.VIBRATE.name(), doVibrate);
     }
 
     /**
@@ -211,7 +213,7 @@ public class SettingsFragment extends Fragment implements Constants {
      * activity.
      */
     public interface OnFragmentInteractionListener {
-        public AppContextWrapper getActivityContext();
+        public ApplicationContextWrapper getActivityContext();
         public boolean isFirstLaunch();
         public boolean isSensorServiceRunning();
     }

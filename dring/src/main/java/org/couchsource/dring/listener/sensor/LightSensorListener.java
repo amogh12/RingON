@@ -3,24 +3,35 @@ package org.couchsource.dring.listener.sensor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
-import org.couchsource.dring.application.AppContextWrapper;
-import org.couchsource.dring.service.DeviceStateListener;
+import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
- * author Kunal
+ * Listener for the Light Sensor on a device.
+ *
+ * author Kunal Sanghavi
  */
 public class LightSensorListener extends DeviceSensorEventListener {
 
-    public LightSensorListener(AppContextWrapper contextWrapper,DeviceStateListener deviceStateListener){
-        super(contextWrapper,deviceStateListener);
+    /**
+     * Creates a new instance of the listener
+     * @param sensorEventsAggregator required {@link org.couchsource.dring.service.SensorEventsAggregator}
+     */
+    public LightSensorListener(SensorEventsAggregator sensorEventsAggregator){
+        super(sensorEventsAggregator);
     }
+
+
+    @Override
+    public void register() {
+        super.register(Sensor.TYPE_LIGHT);
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_LIGHT){
             processEvent(event);
         }
     }
-
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -29,12 +40,8 @@ public class LightSensorListener extends DeviceSensorEventListener {
 
     private void processEvent(SensorEvent event) {
         if (event.values[0] < 10)
-            getDeviceStateListener().registerDarkness();
+            getSensorEventsAggregator().registerDarkness();
         else
-            getDeviceStateListener().registerIllumination();
-    }
-
-    public void register() {
-        super.register(Sensor.TYPE_LIGHT);
+            getSensorEventsAggregator().registerIllumination();
     }
 }

@@ -6,38 +6,44 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.ApplicationContextWrapper;
+import org.couchsource.dring.listener.Listener;
 
 /**
- * author Kunal
+ * Listener to listen call state if "Vibrate On Ring" feature is turned on.
+ *
+ * author Kunal Sanghavi
  */
-public class IncomingCallStateListener extends PhoneStateListener {
+public class IncomingCallStateListener extends PhoneStateListener implements Listener {
     private static final String TAG = IncomingCallStateListener.class.getName();
     //vibrate 7 times
     private static final long[] vibrationPattern = {0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
-
     private Vibrator vibrator;
-    private AppContextWrapper contextWrapper;
+    private ApplicationContextWrapper context;
 
+    /**
+     * Create new instance
+     * @param context
+     */
     public IncomingCallStateListener(Context context) {
         if (context == null) {
             Log.e(TAG, "Context found null");
         } else {
-            contextWrapper = new AppContextWrapper(context);
+            this.context = new ApplicationContextWrapper(context);
         }
     }
 
+    @Override
     public void register(){
-        TelephonyManager telephony = contextWrapper.getTelephonyService();
+        TelephonyManager telephony = context.getTelephonyService();
         telephony.listen(this, PhoneStateListener.LISTEN_CALL_STATE);
     }
 
+    @Override
     public void unregister(){
-        TelephonyManager telephony = contextWrapper.getTelephonyService();
+        TelephonyManager telephony = context.getTelephonyService();
         telephony.listen(this, PhoneStateListener.LISTEN_NONE);
     }
-
-
 
     @Override
     public void onCallStateChanged(int state, String incomingNumber) {
@@ -45,7 +51,6 @@ public class IncomingCallStateListener extends PhoneStateListener {
             Log.d(TAG, "device ringing");
             startVibrate();
         }
-
         if ((state == TelephonyManager.CALL_STATE_IDLE) ||
                 (state == TelephonyManager.CALL_STATE_OFFHOOK)) {
             Log.d(TAG, "device idle or off the hook");
@@ -54,8 +59,8 @@ public class IncomingCallStateListener extends PhoneStateListener {
     }
 
     private void startVibrate() {
-        if (contextWrapper != null) {
-            vibrator = contextWrapper.getVibratorService();
+        if (context != null) {
+            vibrator = context.getVibratorService();
             if (vibrator.hasVibrator()) {
                 vibrator.vibrate(vibrationPattern, -1);
             }

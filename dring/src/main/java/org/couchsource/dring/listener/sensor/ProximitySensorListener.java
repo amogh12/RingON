@@ -3,20 +3,25 @@ package org.couchsource.dring.listener.sensor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
-import org.couchsource.dring.application.AppContextWrapper;
-import org.couchsource.dring.service.DeviceStateListener;
+import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
- * Listener for the proximity sensor
+ * Listener for the proximity sensor on a device
  * @author Kunal Sanghavi
  */
 public class ProximitySensorListener extends DeviceSensorEventListener {
 
     /**
      * Instantiates a proximity sensor listener
+     * @param sensorEventsAggregator {@link org.couchsource.dring.service.SensorEventsAggregator}
      */
-    public ProximitySensorListener(AppContextWrapper contextWrapper, DeviceStateListener deviceStateListener){
-        super(contextWrapper,deviceStateListener);
+    public ProximitySensorListener(SensorEventsAggregator sensorEventsAggregator){
+        super(sensorEventsAggregator);
+    }
+
+    @Override
+    public void register() {
+        super.register(Sensor.TYPE_PROXIMITY);
     }
 
     @Override
@@ -33,14 +38,9 @@ public class ProximitySensorListener extends DeviceSensorEventListener {
 
     private void processEvent(SensorEvent event) {
         if (event.values[0] == getMaxProximity()) {
-            getDeviceStateListener().registerDistantProximity();
+            getSensorEventsAggregator().registerDistantProximity();
         } else {
-            getDeviceStateListener().registerCloseProximity();
+            getSensorEventsAggregator().registerCloseProximity();
         }
     }
-
-    public void register() {
-        super.register(Sensor.TYPE_PROXIMITY);
-    }
-
 }
