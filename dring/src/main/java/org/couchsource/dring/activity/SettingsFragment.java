@@ -49,7 +49,7 @@ public class SettingsFragment extends Fragment implements Constants {
 
 
     /**
-     * Do not use. Use newInstance() instead.
+     * Do not use. Use newInstance(String devicePosition) instead.
      */
     public SettingsFragment() {
     }

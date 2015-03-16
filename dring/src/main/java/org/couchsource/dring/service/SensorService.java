@@ -18,8 +18,8 @@ import org.couchsource.dring.listener.sensor.LightSensorListener;
 import org.couchsource.dring.listener.sensor.ProximitySensorListener;
 
 /**
- * Sticky service that registers all Sensor Listeners, phone state listener and broadcast receiver.
- * It the main service of RingON. The service "smartly" registers and un-registers
+ * Sticky service that manages all sensor listeners, phone state listener and broadcast receiver.
+ * It the main command center of RingON. The service also smartly registers and un-registers
  * poll-based Accelerometer Sensor to save battery.
  *
  * @author Kunal Sanghavi

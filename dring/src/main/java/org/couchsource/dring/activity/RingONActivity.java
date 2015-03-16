@@ -31,6 +31,7 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
     private static final String TAG = RingONActivity.class.getName();
     private ApplicationContextWrapper context;
     private boolean firstRun = false;
+    private boolean serviceOn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +49,10 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
             Log.d(TAG,"Fragment "+ DevicePosition.IN_POCKET.name()+" added");
             fragmentTransaction.commit();
         }
+        //check if the app is launched for the first time
         firstRun = context.getBooleanPreference(RING_ON, FIRST_RUN, true);
+        //Service is supposed to be ON, but it may not - due to a crash or newer version of the app.
+        serviceOn = context.getBooleanPreference(RING_ON, SENSOR_SERVICE_ON, false);
         Log.d(TAG,"Activity created. Running for the first time? "+firstRun);
     }
 
@@ -64,7 +68,7 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
 
     @Override
     public boolean isSensorServiceRunning() {
-        return SensorService.isServiceRunning();
+        return (SensorService.isServiceRunning() || serviceOn);
     }
 
     @Override
@@ -83,7 +87,7 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
         if (firstRun){
             toggleSwitch.setChecked(true);
         }else{
-            toggleSwitch.setChecked(SensorService.isServiceRunning());
+            toggleSwitch.setChecked(isSensorServiceRunning());
         }
         return true;
     }
