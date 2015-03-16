@@ -4,39 +4,51 @@ import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import org.couchsource.dring.application.AppContextWrapper;
-import org.couchsource.dring.service.DeviceStateListener;
+import org.couchsource.dring.application.ApplicationContextWrapper;
+import org.couchsource.dring.listener.Listener;
+import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
- * author Kunal
+ * Base class for Accelerometer, Proximity and Light sensors.
+ *
+ * author Kunal Sanghavi
  */
-public abstract class DeviceSensorEventListener implements SensorEventListener{
+public abstract class DeviceSensorEventListener implements SensorEventListener, Listener{
 
-    private final AppContextWrapper contextWrapper;
+    private final ApplicationContextWrapper contextWrapper;
     private SensorManager mSensorManager;
-    private final DeviceStateListener deviceStateListener;
+    private final SensorEventsAggregator sensorEventsAggregator;
 
 
-    protected DeviceSensorEventListener(AppContextWrapper contextWrapper, DeviceStateListener deviceStateListener){
-        this.contextWrapper = contextWrapper;
-        this.deviceStateListener = deviceStateListener;
+    protected DeviceSensorEventListener(SensorEventsAggregator sensorEventsAggregator){
+        this.contextWrapper = sensorEventsAggregator.getContext();
+        this.sensorEventsAggregator = sensorEventsAggregator;
     }
 
+    /**
+     * registers a Sensor Type
+     * @param sensorType (Accelerometer, Light or Proximity Sensor)
+     */
     protected void register(int sensorType){
         mSensorManager = contextWrapper.getSensorService();
         Sensor mSensor = mSensorManager.getDefaultSensor(sensorType);
         mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    @Override
     public void unregister(){
         mSensorManager = contextWrapper.getSensorService();
         mSensorManager.unregisterListener(this);
     }
 
-    protected DeviceStateListener getDeviceStateListener() {
-        return deviceStateListener;
+    protected SensorEventsAggregator getSensorEventsAggregator() {
+        return sensorEventsAggregator;
     }
 
+    /**
+     * Gets maximum proximity for a device. The value varies per device.
+     * @return float value of max proximity range
+     */
     protected float getMaxProximity(){
         Sensor mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         return mSensor.getMaximumRange();

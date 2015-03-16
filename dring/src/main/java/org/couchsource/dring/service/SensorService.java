@@ -7,33 +7,36 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.IBinder;
 import android.util.Log;
-import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DeviceProperty;
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
+import org.couchsource.dring.listener.Listener;
 import org.couchsource.dring.listener.phonestate.IncomingCallStateListener;
 import org.couchsource.dring.listener.sensor.AccelerometerSensorListener;
 import org.couchsource.dring.listener.sensor.LightSensorListener;
 import org.couchsource.dring.listener.sensor.ProximitySensorListener;
 
 /**
- * Sticky service that registers Listeners for Accelerometer sensor, proximity sensor and light sensor
+ * Sticky service that manages all sensor listeners, phone state listener and broadcast receiver.
+ * It the main command center of RingON. The service also smartly registers and un-registers
+ * poll-based Accelerometer Sensor to save battery.
  *
  * @author Kunal Sanghavi
  */
-public class SensorService extends Service implements DeviceStateListenerCallback, Constants {
+public class SensorService extends Service implements SensorEventsAggregatorCallback, Constants {
 
 
     private static final String TAG = SensorService.class.getName();
-    private static volatile boolean mIsServiceRunning = false;
-    private static boolean mIsAccelerometerAndLightSensorOn = false;
-    private static boolean isBroadcastReceiverRegistered = false;
-    private AppContextWrapper context;
-    private AccelerometerSensorListener mAccelerometerSensorListener;
-    private LightSensorListener mLightSensorListener;
-    private ProximitySensorListener mProximitySensorListener;
-    private DeviceStateListener deviceStateListener;
-    private IncomingCallStateListener phoneListener;
+    private static volatile boolean isServiceRunning = false;
+    private static boolean isAccelerometerAndLightSensorOn = false;
+    private static boolean isPhoneListenerRegistered = false;
+    private ApplicationContextWrapper context;
+    private Listener mAccelerometerSensorListener;
+    private Listener mLightSensorListener;
+    private Listener mProximitySensorListener;
+    private Listener phoneListener;
+    private SensorEventsAggregator sensorEventsAggregator;
     private SharedPreferences.OnSharedPreferenceChangeListener sharedPrefsListener;
     private String currentDeviceStatus;
     private final Object currentStatusLock = new Object();
@@ -45,12 +48,7 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
      * @return boolean indicating whether the service is running or not
      */
     public static boolean isServiceRunning() {
-        return mIsServiceRunning;
-    }
-
-    private static synchronized void flagServiceStatus(boolean isServiceRunning) {
-        mIsServiceRunning = isServiceRunning;
-        Log.d(TAG, "Is SensorService running? " + isServiceRunning);
+        return isServiceRunning;
     }
 
     @Override
@@ -61,9 +59,9 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        context = new AppContextWrapper(this.getBaseContext());
-        if (deviceStateListener == null) {
-            deviceStateListener = new DeviceStateListener(this);
+        context = new ApplicationContextWrapper(this.getBaseContext());
+        if (sensorEventsAggregator == null) {
+            sensorEventsAggregator = new SensorEventsAggregator(this);
         }
         if (phoneListener == null) {
             phoneListener = new IncomingCallStateListener(context);
@@ -71,45 +69,45 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
         registerSensorListeners();
         registerSharedPrefsListener();
         flagServiceStatus(true);
-        context.setBooleanSharedPref(RING_ON,SENSOR_SERVICE_ON,true);
+        context.setBooleanPreference(RING_ON, SENSOR_SERVICE_ON, true);
         Log.d(TAG, "Service Started");
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        context.setBooleanSharedPref(RING_ON,SENSOR_SERVICE_ON,false);
+        context.setBooleanPreference(RING_ON, SENSOR_SERVICE_ON, false);
         flagServiceStatus(false);
         unregisterPhoneListener();
         unregisterProximitySensor();
         unregisterAccelerometerAndLightSensors();
         unregisterSharedPrefsListener();
-        deviceStateListener = null;
+        sensorEventsAggregator = null;
         context = null;
         super.onDestroy();
     }
 
     @Override
-    public void signalNewDevicePlacement(DeviceStatus deviceStatus) {
-        if (!mIsServiceRunning){
+    public void signalNewPosition(DevicePosition devicePosition) {
+        if (!isServiceRunning){
             return;
         }
-        Log.d(TAG, "Signalled new device status " + deviceStatus);
-        if (deviceStatus == null) {
+        Log.d(TAG, "Signalled new device status " + devicePosition);
+        if (devicePosition == null) {
             unregisterPhoneListener();
             resetCountdownToLowPowerMode();
         } else {
             synchronized (currentStatusLock) {
-                if (currentDeviceStatus != deviceStatus.name()) {
-                    currentDeviceStatus = deviceStatus.name();
-                    if (deviceStatus.isStatusValid()) {
-                        handleNewDevicePlacement(deviceStatus.name());
+                if (currentDeviceStatus != devicePosition.name()) {
+                    currentDeviceStatus = devicePosition.name();
+                    if (devicePosition.isUserPreferredPosition()) {
+                        handleNewDevicePlacement(devicePosition.name());
                         resetCountdownToLowPowerMode();
                     }
                 } else {
-                    if (deviceStatus.isStatusValid()) {
+                    if (devicePosition.isUserPreferredPosition()) {
                         if (attemptLowPowerMode()) {
-                            Log.d(TAG, "Switched off AccelerometerSensorListener and LightSensorListener with current status " + deviceStatus);
+                            Log.d(TAG, "Switched off AccelerometerSensorListener and LightSensorListener with current status " + devicePosition);
                         }
                     }
                 }
@@ -119,22 +117,27 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
 
     @Override
     public void signalDeviceProximityChanged() {
-        if (mIsServiceRunning) {
+        if (isServiceRunning) {
             exitLowPowerMode();
         }
     }
 
     @Override
-    public AppContextWrapper getContext() {
+    public ApplicationContextWrapper getContext() {
         return context;
     }
 
+    private static synchronized void flagServiceStatus(boolean isServiceRunning) {
+        SensorService.isServiceRunning = isServiceRunning;
+        Log.d(TAG, "Is SensorService running? " + isServiceRunning);
+    }
+
     private void handleNewDevicePlacement(String deviceStatus) {
-        boolean isActive = context.getBooleanSharedPref(deviceStatus, DeviceProperty.ACTIVE.name(), false);
+        boolean isActive = context.getBooleanPreference(deviceStatus, DeviceProperty.ACTIVE.name(), false);
         boolean doVibrate = false;
         if (isActive) {
-            float ringerLevel = context.getFloatSharedPref(deviceStatus, DeviceProperty.RINGER.name(), 0);
-            doVibrate = context.getBooleanSharedPref(deviceStatus, DeviceProperty.VIBRATE.name(), false);
+            float ringerLevel = context.getFloatPreference(deviceStatus, DeviceProperty.RINGER.name(), 0);
+            doVibrate = context.getBooleanPreference(deviceStatus, DeviceProperty.VIBRATE.name(), false);
             changeRingerLevel(ringerLevel);
         }
         if (doVibrate) {
@@ -176,39 +179,39 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
     }
 
     private synchronized void registerAccelerometerAndLightSensors() {
-        if (!mIsAccelerometerAndLightSensorOn) {
+        if (!isAccelerometerAndLightSensorOn) {
             if (mAccelerometerSensorListener == null) {
-                mAccelerometerSensorListener = new AccelerometerSensorListener(context, deviceStateListener);
+                mAccelerometerSensorListener = new AccelerometerSensorListener(sensorEventsAggregator);
             }
             mAccelerometerSensorListener.register();
             Log.d(TAG, "AccelerometerSensorListener registered");
 
             if (mLightSensorListener == null) {
-                mLightSensorListener = new LightSensorListener(context, deviceStateListener);
+                mLightSensorListener = new LightSensorListener(sensorEventsAggregator);
             }
             mLightSensorListener.register();
             Log.d(TAG, "LightSensorListener registered");
-            mIsAccelerometerAndLightSensorOn = true;
+            isAccelerometerAndLightSensorOn = true;
         }
     }
 
     private void registerProximitySensor() {
         if (mProximitySensorListener == null) {
-            mProximitySensorListener = new ProximitySensorListener(context, deviceStateListener);
+            mProximitySensorListener = new ProximitySensorListener(sensorEventsAggregator);
         }
         mProximitySensorListener.register();
         Log.d(TAG, "ProximitySensorListener registered");
     }
 
     private void unregisterAccelerometerAndLightSensors() {
-        if (mIsAccelerometerAndLightSensorOn) {
+        if (isAccelerometerAndLightSensorOn) {
             mAccelerometerSensorListener.unregister();
             mAccelerometerSensorListener = null;
             Log.d(TAG, "AccelerometerSensorListener unregistered");
             mLightSensorListener.unregister();
             mLightSensorListener = null;
             Log.d(TAG, "LightSensorListener unregistered");
-            mIsAccelerometerAndLightSensorOn = false;
+            isAccelerometerAndLightSensorOn = false;
         }
     }
 
@@ -227,29 +230,29 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
                     }
                 };
 
-        for (DeviceStatus deviceStatus : DeviceStatus.getAllUserPreferences()) {
-            context.getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(sharedPrefsListener);
+        for (DevicePosition devicePosition : DevicePosition.getAllUserPreferredPositions()) {
+            context.getSharedPreferences(devicePosition.name(), Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(sharedPrefsListener);
         }
     }
 
     private void unregisterSharedPrefsListener() {
-        for (DeviceStatus deviceStatus : DeviceStatus.getAllUserPreferences()) {
-            context.getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(sharedPrefsListener);
+        for (DevicePosition devicePosition : DevicePosition.getAllUserPreferredPositions()) {
+            context.getSharedPreferences(devicePosition.name(), Context.MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(sharedPrefsListener);
         }
         sharedPrefsListener = null;
     }
 
     private void registerPhoneListener() {
-        if (!isBroadcastReceiverRegistered) {
+        if (!isPhoneListenerRegistered) {
             phoneListener.register();
-            isBroadcastReceiverRegistered = true;
+            isPhoneListenerRegistered = true;
             Log.d(TAG, "PhoneListener successfully registered");
         }
     }
 
     private void unregisterPhoneListener() {
-        if (isBroadcastReceiverRegistered) {
-            isBroadcastReceiverRegistered = false;
+        if (isPhoneListenerRegistered) {
+            isPhoneListenerRegistered = false;
             phoneListener.unregister();
             Log.d(TAG, "PhoneListener successfully unregistered");
         }
@@ -265,6 +268,5 @@ public class SensorService extends Service implements DeviceStateListenerCallbac
             audioManager.setStreamVolume(AudioManager.STREAM_RING, Math.round(ringerLevel / 100 * audioManager.getStreamMaxVolume(AudioManager.STREAM_RING)), AudioManager.FLAG_ALLOW_RINGER_MODES);
         }
     }
-
 
 }

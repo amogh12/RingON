@@ -1,7 +1,9 @@
 package org.couchsource.dring.application;
 
 /**
- * Created by Kunal on 1/11/2015.
+ * Constant Interface
+ *
+ * @author Kunal Sanghavi
  */
 public interface Constants {
 

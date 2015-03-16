@@ -1,8 +1,6 @@
 package org.couchsource.dring.activity;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -16,19 +14,22 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 
-import org.couchsource.dring.application.AppContextWrapper;
+import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DeviceProperty;
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
 import org.couchsource.dring.application.DeviceStatusHelper;
 import org.couchsource.dring.application.R;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ * A simple {@link Fragment} representing settings for a device position.
  * Activities that contain this fragment must implement the
  * {@link SettingsFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
+ *
+ * @author Kunal Sanghavi
+ *
  */
 public class SettingsFragment extends Fragment implements Constants {
 
@@ -36,32 +37,35 @@ public class SettingsFragment extends Fragment implements Constants {
     public static final float ENABLED = 1f;
     public static final float DISABLED = 0.4f;
     private OnFragmentInteractionListener mListener;
-    private DeviceStatus deviceStatus;
+    private String devicePosition;
     private int ringerVolume;
     private boolean doVibrate;
     private boolean isFeatureActive;
     private CheckBox cbEnabled;
-    private SeekBar mVolumeControl;
+    private SeekBar sbVolumeControl;
     private View ringerIcon;
     private View ringtoneLabel;
     private CheckBox cbVibrateOnRing;
 
 
     /**
-     * Do not use.
-     *
-     * @see {@link }
+     * Do not use. Use newInstance(String devicePosition) instead.
      */
     public SettingsFragment() {
     }
 
-    public static SettingsFragment newInstance(String mPhoneStatus) {
-        if (TextUtils.isEmpty(mPhoneStatus)) {
-            throw new IllegalArgumentException("mPhoneStatus is blank or null");
+    /**
+     * creates a new instance of SettingsFragment
+     * @param devicePosition
+     * @return
+     */
+    public static SettingsFragment newInstance(String devicePosition) {
+        if (TextUtils.isEmpty(devicePosition)) {
+            throw new IllegalArgumentException("devicePosition is blank or null");
         }
         SettingsFragment settingsFragment = new SettingsFragment();
         Bundle bundle = new Bundle();
-        bundle.putString("mPhoneStatus", mPhoneStatus);
+        bundle.putString("devicePosition", devicePosition);
         settingsFragment.setArguments(bundle);
         return settingsFragment;
     }
@@ -71,15 +75,16 @@ public class SettingsFragment extends Fragment implements Constants {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              final Bundle savedInstanceState) {
 
-        deviceStatus = DeviceStatus.phoneStatusFromLabel((String) getArguments().get("mPhoneStatus"));
-        if (deviceStatus == null) {
-            throw new IllegalArgumentException("phoneStatus is null or blank");
+        devicePosition = (String) getArguments().get("devicePosition");
+        if (!DevicePosition.isDevicePositionValid(devicePosition)){
+            throw new IllegalArgumentException("Invalid device position detected "+ devicePosition);
         }
+
         final View mView = inflater.inflate(R.layout.settings_layout, container, false);
-        mVolumeControl = (SeekBar) mView.findViewById(R.id.seekBarRinger);
+        sbVolumeControl = (SeekBar) mView.findViewById(R.id.seekBarRinger);
         ringerIcon =  mView.findViewById(R.id.RingerIcon);
         ringtoneLabel =  mView.findViewById(R.id.lblRingerVolume);
-        mVolumeControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        sbVolumeControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 updateImage(seekBar, mView, R.id.RingerIcon, R.drawable.ic_action_ring_volume);
@@ -92,27 +97,27 @@ public class SettingsFragment extends Fragment implements Constants {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                saveUserPreferences();
+                saveRingerVolume();
             }
         });
-        ringerVolume = (int)mListener.getActivityContext().getFloatSharedPref(deviceStatus.name(), DeviceProperty.RINGER.name(), 50.0f);
-        mVolumeControl.setProgress(ringerVolume);
-        updateImage(mVolumeControl, mView, R.id.RingerIcon, R.drawable.ic_action_ring_volume);
+        ringerVolume = (int)mListener.getActivityContext().getFloatPreference(devicePosition, DeviceProperty.RINGER.name(), 50.0f);
+        sbVolumeControl.setProgress(ringerVolume);
+        updateImage(sbVolumeControl, mView, R.id.RingerIcon, R.drawable.ic_action_ring_volume);
 
-        doVibrate = mListener.getActivityContext().getBooleanSharedPref(deviceStatus.name(), DeviceProperty.VIBRATE.name(), false);
+        doVibrate = mListener.getActivityContext().getBooleanPreference(devicePosition, DeviceProperty.VIBRATE.name(), false);
         cbVibrateOnRing = (CheckBox) mView.findViewById(R.id.cbVibrate);
         cbVibrateOnRing.setChecked(doVibrate);
 
         cbEnabled = (CheckBox) mView.findViewById(R.id.cbEnabled);
-        cbEnabled.setText(DeviceStatusHelper.getResId(deviceStatus));
+        cbEnabled.setText(DeviceStatusHelper.getResId(devicePosition));
 
-        isFeatureActive = mListener.getActivityContext().getBooleanSharedPref(deviceStatus.name(), DeviceProperty.ACTIVE.name(), true);
+        isFeatureActive = mListener.getActivityContext().getBooleanPreference(devicePosition, DeviceProperty.ACTIVE.name(), true);
         cbEnabled.setChecked(isFeatureActive);
 
         if (mListener.isFirstLaunch()){
             setEnabledFragmentView(true);
         }else{
-            setEnabledFragmentView(mListener.isRingerServiceRunning());
+            setEnabledFragmentView(mListener.isSensorServiceRunning());
         }
 
         cbEnabled.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
@@ -120,7 +125,7 @@ public class SettingsFragment extends Fragment implements Constants {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 isFeatureActive = isChecked;
                 setEnabledChildren(isChecked);
-                saveUserPreferences();
+                saveFeatureActivePreference();
             }
         });
 
@@ -128,15 +133,18 @@ public class SettingsFragment extends Fragment implements Constants {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 doVibrate = isChecked;
-                saveUserPreferences();
+                saveVibratePreference();
             }
         });
 
-        Log.d(TAG, "New view for phone status " + deviceStatus.name() + " created");
+        Log.d(TAG, "New view for phone status " + devicePosition + " created");
         return mView;
     }
 
-
+    /**
+     * Enable or disable fragment view
+     * @param on
+     */
     public void setEnabledFragmentView(boolean on) {
        setEnabled(cbEnabled, on);
        setEnabledChildren(isFeatureActive && on);
@@ -160,7 +168,7 @@ public class SettingsFragment extends Fragment implements Constants {
     }
 
     private void setEnabledChildren(boolean isEnabled) {
-        setEnabled(mVolumeControl, isEnabled);
+        setEnabled(sbVolumeControl, isEnabled);
         setEnabled(ringerIcon, isEnabled);
         setEnabled(ringtoneLabel, isEnabled);
         setEnabled(cbVibrateOnRing, isEnabled);
@@ -186,13 +194,16 @@ public class SettingsFragment extends Fragment implements Constants {
         imageView.setImageDrawable(drawable);
     }
 
-    private void saveUserPreferences() {
-        SharedPreferences.Editor editor = mListener.getActivityContext().getSharedPreferences(deviceStatus.name(), Context.MODE_PRIVATE).edit();
-        editor.putBoolean(DeviceProperty.ACTIVE.name(), isFeatureActive);
-        editor.putFloat(DeviceProperty.RINGER.name(), ringerVolume);
-        editor.putBoolean(DeviceProperty.VIBRATE.name(), doVibrate);
-        editor.apply();
-        Log.d(TAG, "User pref for " + deviceStatus.name() + " saved!");
+    private void saveRingerVolume(){
+        mListener.getActivityContext().setFloatPreference(devicePosition, DeviceProperty.RINGER.name(), ringerVolume);
+    }
+
+    private void saveFeatureActivePreference(){
+        mListener.getActivityContext().setBooleanPreference(devicePosition, DeviceProperty.ACTIVE.name(), isFeatureActive);
+    }
+
+    private void saveVibratePreference(){
+        mListener.getActivityContext().setBooleanPreference(devicePosition, DeviceProperty.VIBRATE.name(), doVibrate);
     }
 
     /**
@@ -200,16 +211,10 @@ public class SettingsFragment extends Fragment implements Constants {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        public AppContextWrapper getActivityContext();
+        public ApplicationContextWrapper getActivityContext();
         public boolean isFirstLaunch();
-        public boolean isRingerServiceRunning();
+        public boolean isSensorServiceRunning();
     }
-
-
 }

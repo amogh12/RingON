@@ -1,11 +1,12 @@
 package org.couchsource.dring.application;
 
 /**
- * Created by Kunal on 12/27/2014.
+ * Enum for all device properties
+ *
+ * @author Kunal Sanghavi
  */
 public enum DeviceProperty {
     ACTIVE,
     RINGER,
     VIBRATE
-
 }

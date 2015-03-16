@@ -1,10 +1,9 @@
 package org.couchsource.dring.application.model;
 
-
-import org.couchsource.dring.application.DeviceStatus;
+import org.couchsource.dring.application.DevicePosition;
 
 /**
- * A bean that holds device status.
+ * A bean that registers all sensor readings and gives out current position of the device.
  *
  * @author Kunal Sanghavi
  */
@@ -17,57 +16,83 @@ public class Device {
     private Boolean isCloseProximity;
     private Boolean isDark;
 
+    /**
+     * Create a new instance
+     */
     public Device() {
-
         isFaceUp = null;
         isFaceDown = null;
         isCloseProximity = null;
         isDark = null;
     }
 
+    /**
+     * Registers face up signal
+     */
     public void registerFaceUp() {
         this.setFaceUp(true);
     }
 
+    /**
+     * Registers face down signal
+     */
     public void registerFaceDown() {
         this.setFaceDown(true);
     }
 
+    /**
+     * Registers unknown position
+     */
     public void registerUnknownState() {
         this.setFaceUp(false);
         this.setFaceDown(false);
     }
 
+    /**
+     * Registers if the device is in close proximity of an external entity
+     */
     public void registerCloseProximity() {
         this.setProximity(true);
     }
 
+    /**
+     * Registers if the device is NOY in close proximity of any external entity
+     */
     public void registerDistantProximity() {
         this.setProximity(false);
     }
 
+    /**
+     * Registers if the device is in dark area.
+     */
     public void registerDarkness() {
         this.setDark(true);
     }
 
-
+    /**
+     * Registers if the device is in brightly lit area.
+     */
     public void registerIllumination() {
         this.setDark(false);
     }
 
-    public DeviceStatus getCurrentStatus() {
+    /**
+     * Returns current position of device.
+     * @return DevicePosition
+     */
+    public DevicePosition getCurrentPosition() {
         if (!isReady())
             return null;
 
         if (isFaceUp()) {
-            return (DeviceStatus.FACE_UP);
-        } else if (isFaceDown() && isCloseProximity()) {
-            return (DeviceStatus.FACE_DOWN);
+            return (DevicePosition.FACE_UP);
+        } else if (isFaceDown()) {
+            return (DevicePosition.FACE_DOWN);
         } else if (isDark() && isCloseProximity()
                 && (!isFaceDown()) && (!isFaceUp())) {
-            return (DeviceStatus.IN_POCKET);
+            return (DevicePosition.IN_POCKET);
         }
-        return DeviceStatus.UNKNOWN;
+        return DevicePosition.UNKNOWN;
     }
 
     @Override
@@ -96,7 +121,6 @@ public class Device {
         return isFaceDown;
     }
 
-
     private boolean isReady() {
         return ((isFaceUp != null) && (isFaceDown != null) && (isCloseProximity != null) && (isDark != null));
 
@@ -107,7 +131,6 @@ public class Device {
         if (isFaceUp) {
             this.isFaceDown = !isFaceUp;
         }
-
     }
 
     private void setFaceDown(boolean isFaceDown) {
@@ -115,7 +138,6 @@ public class Device {
         if (isFaceDown) {
             this.isFaceUp = !isFaceDown;
         }
-
     }
 
     private void setProximity(boolean isCloseProximity) {

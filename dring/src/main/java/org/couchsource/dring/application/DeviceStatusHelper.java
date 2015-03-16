@@ -10,12 +10,12 @@ public class DeviceStatusHelper {
 
     private static final Map<String, Integer> statusToResourceMap = new HashMap<>();
     static{
-        statusToResourceMap.put(DeviceStatus.FACE_UP.name(), R.string.FACE_UP_Label);
-        statusToResourceMap.put(DeviceStatus.FACE_DOWN.name(), R.string.FACE_DOWN_Label);
-        statusToResourceMap.put(DeviceStatus.IN_POCKET.name(), R.string.INPOCKET_Label);
+        statusToResourceMap.put(DevicePosition.FACE_UP.getLabel(), R.string.FACE_UP_Label);
+        statusToResourceMap.put(DevicePosition.FACE_DOWN.getLabel(), R.string.FACE_DOWN_Label);
+        statusToResourceMap.put(DevicePosition.IN_POCKET.getLabel(), R.string.INPOCKET_Label);
     }
 
-    public static int getResId(DeviceStatus deviceStatus){
-        return statusToResourceMap.get(deviceStatus.name());
+    public static int getResId(String devicePosition){
+        return statusToResourceMap.get(devicePosition);
     }
 }
