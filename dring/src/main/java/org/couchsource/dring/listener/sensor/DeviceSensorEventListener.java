@@ -9,7 +9,7 @@ import org.couchsource.dring.listener.Listener;
 import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
- * Abstract SensorEventListener class for Accelerometer, Proximity and Light sensors.
+ * Base class for Accelerometer, Proximity and Light sensors.
  *
  * author Kunal Sanghavi
  */

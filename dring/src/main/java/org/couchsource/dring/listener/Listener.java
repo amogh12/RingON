@@ -1,7 +1,7 @@
 package org.couchsource.dring.listener;
 
 /**
- * An interface for all device listeners
+ * Base interface for all device listeners
  *
  * author Kunal Sanghavi
  */
