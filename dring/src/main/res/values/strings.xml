@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">RingON</string>
-    <string name="action_settings">Settings</string>
     <string name="RingerVolume">Ringtone</string>
-    <string name="NotificationVolume">Notification</string>
     <string name="FACE_UP_Label">Face Up Volume Settings</string>
     <string name="FACE_DOWN_Label">Face Down Volume Settings</string>
     <string name="INPOCKET_Label">In Pocket Volume Settings</string>
@@ -11,4 +9,6 @@
     <string name="action_bar_background">0x000000</string>
     <string name="app_updates"></string>
     <string name="eula">The software is provided \"as is\" and the author disclaims all warranties with regard to this software including all implied warranties of merchantability and fitness. In no event shall the author be liable for any special, direct, indirect, or consequential damages or any damages whatsoever resulting from loss of use, data or profits, whether in an action of contract, negligence or other tortious action, arising out of or in connection with the use or performance of this software.</string>
+    <string name="quit">Quit</string>
+    <string name="ringer_icon_description">ringer icon</string>
 </resources>

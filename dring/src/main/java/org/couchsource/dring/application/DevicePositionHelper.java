@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Kunal on 1/4/2015.
+ * Helper class to get the right labels for all device positions
+ * @author Kunal Sanghavi
  */
-public class DeviceStatusHelper {
+public class DevicePositionHelper {
 
     private static final Map<String, Integer> statusToResourceMap = new HashMap<>();
     static{
