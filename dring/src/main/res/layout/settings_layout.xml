@@ -42,7 +42,8 @@
             <ImageView
                 android:id="@+id/RingerIcon"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/ringer_icon_description"/>
 
             <SeekBar
                 android:id="@+id/seekBarRinger"

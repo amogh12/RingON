@@ -16,9 +16,9 @@ import android.widget.SeekBar;
 
 import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.Constants;
+import org.couchsource.dring.application.DevicePositionHelper;
 import org.couchsource.dring.application.DeviceProperty;
 import org.couchsource.dring.application.DevicePosition;
-import org.couchsource.dring.application.DeviceStatusHelper;
 import org.couchsource.dring.application.R;
 
 
@@ -34,8 +34,8 @@ import org.couchsource.dring.application.R;
 public class SettingsFragment extends Fragment implements Constants {
 
     private static final String TAG = SettingsFragment.class.getName();
-    public static final float ENABLED = 1f;
-    public static final float DISABLED = 0.4f;
+    private static final float ENABLED = 1f;
+    private static final float DISABLED = 0.4f;
     private OnFragmentInteractionListener mListener;
     private String devicePosition;
     private int ringerVolume;
@@ -109,7 +109,7 @@ public class SettingsFragment extends Fragment implements Constants {
         cbVibrateOnRing.setChecked(doVibrate);
 
         cbEnabled = (CheckBox) mView.findViewById(R.id.cbEnabled);
-        cbEnabled.setText(DeviceStatusHelper.getResId(devicePosition));
+        cbEnabled.setText(DevicePositionHelper.getResId(devicePosition));
 
         isFeatureActive = mListener.getActivityContext().getBooleanPreference(devicePosition, DeviceProperty.ACTIVE.name(), true);
         cbEnabled.setChecked(isFeatureActive);

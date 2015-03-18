@@ -50,6 +50,7 @@ public abstract class DeviceSensorEventListener implements SensorEventListener, 
      * @return float value of max proximity range
      */
     protected float getMaxProximity(){
+        mSensorManager = contextWrapper.getSensorService();
         Sensor mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         return mSensor.getMaximumRange();
     }

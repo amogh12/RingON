@@ -16,8 +16,7 @@ import org.couchsource.dring.application.R;
 
 public class Disclaimer {
 
-    private String EULA_PREFIX = "eula_";
-    private Activity mActivity;
+    private final Activity mActivity;
 
     public Disclaimer(Activity context) {
         mActivity = context;
@@ -37,10 +36,10 @@ public class Disclaimer {
         PackageInfo versionInfo = getPackageInfo();
 
         // the eulaKey changes every time you increment the version number in the AndroidManifest.xml
-        final String eulaKey = EULA_PREFIX + versionInfo.versionCode;
+        final String eulaKey = "eula_" + versionInfo.versionCode;
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mActivity);
         boolean hasBeenShown = prefs.getBoolean(eulaKey, false);
-        if(hasBeenShown == false){
+        if(!hasBeenShown){
 
             // Show the Eula
             String title = mActivity.getString(R.string.app_name) + " v" + versionInfo.versionName;
