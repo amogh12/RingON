@@ -98,7 +98,7 @@ public class SensorService extends Service implements SensorEventsAggregatorCall
             resetCountdownToLowPowerMode();
         } else {
             synchronized (currentStatusLock) {
-                if (!currentDeviceStatus.equalsIgnoreCase(devicePosition.name())) {
+                if (currentDeviceStatus != devicePosition.name()) {
                     currentDeviceStatus = devicePosition.name();
                     if (devicePosition.isUserPreferredPosition()) {
                         handleNewDevicePlacement(devicePosition.name());
