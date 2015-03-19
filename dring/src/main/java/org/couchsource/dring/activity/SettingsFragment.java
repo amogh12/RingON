@@ -1,6 +1,8 @@
 package org.couchsource.dring.activity;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -76,7 +78,7 @@ public class SettingsFragment extends Fragment implements Constants {
                              final Bundle savedInstanceState) {
 
         devicePosition = (String) getArguments().get("devicePosition");
-        if (!DevicePosition.isDevicePositionValid(devicePosition)){
+        if (!DevicePosition.isPositionValid(devicePosition)){
             throw new IllegalArgumentException("Invalid device position detected "+ devicePosition);
         }
 
@@ -97,7 +99,7 @@ public class SettingsFragment extends Fragment implements Constants {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                saveRingerVolume();
+                saveUserPreferences();
             }
         });
         ringerVolume = (int)mListener.getActivityContext().getFloatPreference(devicePosition, DeviceProperty.RINGER.name(), 50.0f);
@@ -125,7 +127,7 @@ public class SettingsFragment extends Fragment implements Constants {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 isFeatureActive = isChecked;
                 setEnabledChildren(isChecked);
-                saveFeatureActivePreference();
+                saveUserPreferences();
             }
         });
 
@@ -133,7 +135,7 @@ public class SettingsFragment extends Fragment implements Constants {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 doVibrate = isChecked;
-                saveVibratePreference();
+                saveUserPreferences();
             }
         });
 
@@ -194,16 +196,12 @@ public class SettingsFragment extends Fragment implements Constants {
         imageView.setImageDrawable(drawable);
     }
 
-    private void saveRingerVolume(){
-        mListener.getActivityContext().setFloatPreference(devicePosition, DeviceProperty.RINGER.name(), ringerVolume);
-    }
-
-    private void saveFeatureActivePreference(){
-        mListener.getActivityContext().setBooleanPreference(devicePosition, DeviceProperty.ACTIVE.name(), isFeatureActive);
-    }
-
-    private void saveVibratePreference(){
-        mListener.getActivityContext().setBooleanPreference(devicePosition, DeviceProperty.VIBRATE.name(), doVibrate);
+    private void saveUserPreferences(){
+        SharedPreferences.Editor editor = mListener.getActivityContext().getSharedPreferences(devicePosition, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(DeviceProperty.ACTIVE.name(), isFeatureActive);
+        editor.putFloat(DeviceProperty.RINGER.name(), ringerVolume);
+        editor.putBoolean(DeviceProperty.VIBRATE.name(), doVibrate);
+        editor.apply();
     }
 
     /**

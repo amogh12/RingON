@@ -47,7 +47,7 @@ public enum DevicePosition {
         return null;
     }
 
-    public static boolean isDevicePositionValid(String position){
+    public static boolean isPositionValid(String position){
         DevicePosition devicePosition = positionFromLabel(position);
         if (devicePosition == null){
             return false;
