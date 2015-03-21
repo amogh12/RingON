@@ -5,7 +5,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import org.couchsource.dring.application.ApplicationContextWrapper;
-import org.couchsource.dring.listener.Listener;
+import org.couchsource.dring.application.Registrable;
 import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
@@ -13,7 +13,7 @@ import org.couchsource.dring.service.SensorEventsAggregator;
  *
  * author Kunal Sanghavi
  */
-public abstract class DeviceSensorEventListener implements SensorEventListener, Listener{
+public abstract class DeviceSensorEventListener implements SensorEventListener, Registrable {
 
     private final ApplicationContextWrapper contextWrapper;
     private SensorManager mSensorManager;

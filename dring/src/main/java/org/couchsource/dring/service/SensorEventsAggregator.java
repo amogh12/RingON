@@ -5,6 +5,7 @@ import android.util.Log;
 import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.model.Device;
 import org.couchsource.dring.application.DevicePosition;
+import org.couchsource.dring.service.callback.CallbackForSensorEventsAggregator;
 
 /**
  * Aggregates all events from Accelerometer, Light and Proximity Sensors
@@ -17,7 +18,7 @@ public class SensorEventsAggregator {
     private static final String TAG = SensorEventsAggregator.class.getName();
     private static final int MAX_DELAY_COUNT = 3;
     private final Device device;
-    private final SensorEventsAggregatorCallback sensorEventsAggregatorCallback;
+    private final CallbackForSensorEventsAggregator callback;
     private Integer faceUpDelayCounter = 0;
     private Integer faceDownDelayCounter = 0;
     private Integer unknownPositionCounter = 0;
@@ -25,18 +26,18 @@ public class SensorEventsAggregator {
     /**
      * Create a new SensorEventAggregator
      *
-     * @param sensorEventsAggregatorCallback required Callback to SensorService
+     * @param callback required Callback to SensorService
      */
-    public SensorEventsAggregator(SensorEventsAggregatorCallback sensorEventsAggregatorCallback) {
-        if (sensorEventsAggregatorCallback == null) {
-            throw new IllegalArgumentException("sensorEventsAggregatorCallback found null");
+    public SensorEventsAggregator(CallbackForSensorEventsAggregator callback) {
+        if (callback == null) {
+            throw new IllegalArgumentException("callback found null");
         }
-        this.sensorEventsAggregatorCallback = sensorEventsAggregatorCallback;
+        this.callback = callback;
         this.device = new Device();
     }
 
     public ApplicationContextWrapper getContext(){
-        return sensorEventsAggregatorCallback.getContext();
+        return callback.getContext();
     }
 
     /**
@@ -95,7 +96,7 @@ public class SensorEventsAggregator {
      */
     public synchronized void registerCloseProximity() {
             device.registerCloseProximity();
-            sensorEventsAggregatorCallback.signalDeviceProximityChanged();
+            callback.signalDeviceProximityChanged();
 
     }
 
@@ -104,7 +105,7 @@ public class SensorEventsAggregator {
      */
     public synchronized void registerDistantProximity() {
         device.registerDistantProximity();
-        sensorEventsAggregatorCallback.signalDeviceProximityChanged();
+        callback.signalDeviceProximityChanged();
     }
 
     /**
@@ -123,11 +124,12 @@ public class SensorEventsAggregator {
 
     private void examineDeviceStatus() {
         DevicePosition devicePosition = device.getCurrentPosition();
-        //Avoiding false positives
-        if ((devicePosition == DevicePosition.IN_POCKET) && (!sensorEventsAggregatorCallback.getContext().isAudioNormalMode())) {
+        //Avoiding false positives for in pocket position
+        if ((devicePosition == DevicePosition.IN_POCKET) && (!callback.getContext().isAudioNormalMode())) {
+            Log.d(TAG, "Possible false positive detected for in-pocket position");
             return;
         }
-        sensorEventsAggregatorCallback.signalNewPosition(devicePosition);
+        callback.signalNewPosition(devicePosition);
         Log.d(TAG, "Registered Device status " + devicePosition);
 
     }

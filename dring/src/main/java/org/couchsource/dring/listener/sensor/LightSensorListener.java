@@ -6,7 +6,7 @@ import android.hardware.SensorEvent;
 import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
- * Listener for the Light Sensor on a device.
+ * Registrable for the Light Sensor on a device.
  *
  * author Kunal Sanghavi
  */

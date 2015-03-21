@@ -7,14 +7,14 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import org.couchsource.dring.application.ApplicationContextWrapper;
-import org.couchsource.dring.listener.Listener;
+import org.couchsource.dring.application.Registrable;
 
 /**
- * Listener to listen call state if "Vibrate On Ring" feature is turned on.
+ * Registrable to listen call state if "Vibrate On Ring" feature is turned on.
  *
  * author Kunal Sanghavi
  */
-public class IncomingCallStateListener extends PhoneStateListener implements Listener {
+public class IncomingCallStateListener extends PhoneStateListener implements Registrable {
     private static final String TAG = IncomingCallStateListener.class.getName();
     //vibrate 7 times
     private static final long[] vibrationPattern = {0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
@@ -41,6 +41,7 @@ public class IncomingCallStateListener extends PhoneStateListener implements Lis
 
     @Override
     public void unregister(){
+        stopVibrate();
         TelephonyManager telephony = context.getTelephonyService();
         telephony.listen(this, PhoneStateListener.LISTEN_NONE);
     }

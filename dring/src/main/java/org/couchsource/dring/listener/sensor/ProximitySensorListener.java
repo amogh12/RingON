@@ -6,7 +6,7 @@ import android.hardware.SensorEvent;
 import org.couchsource.dring.service.SensorEventsAggregator;
 
 /**
- * Listener for the proximity sensor on a device
+ * Registrable for the proximity sensor on a device
  * @author Kunal Sanghavi
  */
 public class ProximitySensorListener extends DeviceSensorEventListener {
