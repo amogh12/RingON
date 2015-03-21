@@ -57,7 +57,7 @@ public class Disclaimer {
                             // Mark this version as read.
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putBoolean(eulaKey, true);
-                            editor.commit();
+                            editor.apply();
                             dialogInterface.dismiss();
                         }
                     })
