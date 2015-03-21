@@ -1,6 +1,5 @@
-package org.couchsource.dring.service;
+package org.couchsource.dring.service.callback;
 
-import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.DevicePosition;
 
 /**
@@ -8,11 +7,12 @@ import org.couchsource.dring.application.DevicePosition;
  * <p/>
  * author Kunal Sanghavi
  */
-public interface SensorEventsAggregatorCallback {
+public interface CallbackForSensorEventsAggregator extends SensorServiceCallback {
 
 
     /**
      * Signals new device position
+     *
      * @param devicePosition new position of the device
      */
     public void signalNewPosition(DevicePosition devicePosition);
@@ -23,10 +23,5 @@ public interface SensorEventsAggregatorCallback {
      */
     public void signalDeviceProximityChanged();
 
-    /**
-     * Gets the context
-     * @return {@link org.couchsource.dring.application.ApplicationContextWrapper}
-     */
-    public ApplicationContextWrapper getContext();
 
 }

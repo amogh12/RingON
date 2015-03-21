@@ -9,7 +9,7 @@ import org.couchsource.dring.service.SensorEventsAggregator;
 import static java.lang.Math.sqrt;
 
 /**
- * Listener to the Accelerometer Sensor.
+ * Registrable to the Accelerometer Sensor.
  *
  * author Kunal Sanghavi
  */
