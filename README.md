@@ -6,8 +6,8 @@
 - Phone laying flat with screen FACING DOWN
 - Phone IN POCKET
 
-It uses device Accelerometer, light and proximity sensors to detect positions of your device. It is light on battery too. The app smartly turns off battery consuming accelerometer sensor when not required.
-RingON lets you set ringer volume with an option to vibrate on ring for all three positions of the device.
+It uses device Accelerometer, light and proximity sensors to detect positions of your device. It is light on battery too. The app smartly turns off battery consuming accelerometer sensor when not required. <br />
+RingON lets you set ringer volume with an option to vibrate on ring for all three positions of the device. <br />
 Note: "Vibrate on Ring" option doesn't change the device setting. For this feature to work effectively you must uncheck "Vibrate when Ringing" option from your device settings.
 
 ### Screen
