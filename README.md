@@ -1,17 +1,17 @@
 # RingON for Android
 
-[RingON for Android] is a completely free and open source utility app that lets you set your phone ringer volume dynamically based on the position of the device. It uses your device sensors to detect 3 positions of your device -
+[RingON for Android] is a free and open source utility app that lets you set your phone ringer volume dynamically based on your device position. It uses your phone sensors to detect three positions for your device -
 
-- Device FACING UP
-- Device FACING DOWN
-- Device IN POCKET
+- Phone laying flat with screen FACING UP
+- Phone laying flat with screen FACING DOWN
+- Phone IN POCKET
 
-RingON lets you set ringer volume with an option to vibrate on ring for all three positions of the device. It uses device Accelerometer, light and proximity sensors to detect positions of your device. It is light on battery too. The app smartly turns off battery consuming accelerometer sensor when not required..
-
+It uses device Accelerometer, light and proximity sensors to detect positions of your device. It is light on battery too. The app smartly turns off battery consuming accelerometer sensor when not required.
+RingON lets you set ringer volume with an option to vibrate on ring for all three positions of the device.
 Note: "Vibrate on Ring" option doesn't change the device setting. For this feature to work effectively you must uncheck "Vibrate when Ringing" option from your device settings.
 
 ### Screen
-
+![RingON Screen](https://github.com/CouchSource/RingON/raw/screens/screens/main_screen.png "RingON screen")
 
 
 ### Version
@@ -23,6 +23,7 @@ Want to contribute? send an email at [couchcource@googlegroups.com] with the det
 ### Todos
 
  - Write Tests
+ - Include location-based settings.
  - (Any other suggestions are welcome)
 
 
