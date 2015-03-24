@@ -95,8 +95,8 @@ public class SensorEventsAggregator {
      * Registers if device is in close proximity to any external entity.
      */
     public synchronized void registerCloseProximity() {
-            device.registerCloseProximity();
-            callback.signalDeviceProximityChanged();
+        device.registerCloseProximity();
+        callback.signalDeviceProximityChanged();
 
     }
 

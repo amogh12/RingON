@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.IBinder;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import org.couchsource.dring.application.ApplicationContextWrapper;
@@ -140,12 +141,9 @@ public class SensorService extends Service implements CallbackForSensorEventsAgg
         if (event == null) {
             return;
         }
-        switch (event) {
-            case USER_PREF_CHANGED:
-                currentDeviceStatus = null;
-            default:
-                exitLowPowerMode();
-        }
+        currentDeviceStatus = null;
+        exitLowPowerMode();
+
     }
 
     private void handleNewDevicePlacement(String deviceStatus) {
@@ -308,11 +306,16 @@ public class SensorService extends Service implements CallbackForSensorEventsAgg
     private void changeRingerLevel(float ringerLevel) {
         Log.d(TAG, "Ringer " + String.valueOf(ringerLevel));
         AudioManager audioManager = context.getAudioService();
-        if (ringerLevel == 0) {
-            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        } else {
-            audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+        //setRingerMode does not function when the phone is ringing.
+        if (context.isDeviceRinging()) {
             audioManager.setStreamVolume(AudioManager.STREAM_RING, Math.round(ringerLevel / 100 * audioManager.getStreamMaxVolume(AudioManager.STREAM_RING)), AudioManager.FLAG_ALLOW_RINGER_MODES);
+        } else {
+            if (ringerLevel == 0) {
+                audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            } else {
+                audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                audioManager.setStreamVolume(AudioManager.STREAM_RING, Math.round(ringerLevel / 100 * audioManager.getStreamMaxVolume(AudioManager.STREAM_RING)), AudioManager.FLAG_ALLOW_RINGER_MODES);
+            }
         }
     }
 }

@@ -201,6 +201,7 @@ public class SettingsFragment extends Fragment implements Constants {
         editor.putBoolean(DeviceProperty.ACTIVE.name(), isFeatureActive);
         editor.putFloat(DeviceProperty.RINGER.name(), ringerVolume);
         editor.putBoolean(DeviceProperty.VIBRATE.name(), doVibrate);
+        Log.d(TAG, "user pref saved for "+devicePosition);
         editor.apply();
     }
 
