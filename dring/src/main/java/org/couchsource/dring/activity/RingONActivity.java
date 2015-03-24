@@ -2,8 +2,13 @@ package org.couchsource.dring.activity;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,12 +16,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.ToggleButton;
-
 import org.couchsource.dring.application.ApplicationContextWrapper;
 import org.couchsource.dring.application.Constants;
 import org.couchsource.dring.application.DevicePosition;
 import org.couchsource.dring.application.R;
-import org.couchsource.dring.legal.Disclaimer;
 import org.couchsource.dring.service.SensorService;
 
 /**
@@ -30,8 +33,9 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
 
     private static final String TAG = RingONActivity.class.getName();
     private ApplicationContextWrapper context;
+    ToggleButton toggleBtn;
     private boolean firstRun = false;
-    private boolean serviceOn = false;
+    private boolean eulaHasBeenShown = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,20 +43,11 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
         context = new ApplicationContextWrapper(this);
         decorateActionBar();
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-            fragmentTransaction.add(R.id.FaceUpSettingFrame, SettingsFragment.newInstance(DevicePosition.FACE_UP.name()));
-            Log.d(TAG,"Fragment "+ DevicePosition.FACE_UP.name()+" added");
-            fragmentTransaction.add(R.id.FaceDownSettingFrame, SettingsFragment.newInstance(DevicePosition.FACE_DOWN.name()));
-            Log.d(TAG,"Fragment "+ DevicePosition.FACE_DOWN.name()+" added");
-            fragmentTransaction.add(R.id.InPocketSettingFrame, SettingsFragment.newInstance(DevicePosition.IN_POCKET.name()));
-            Log.d(TAG,"Fragment "+ DevicePosition.IN_POCKET.name()+" added");
-            fragmentTransaction.commit();
-        }
+        addSettingFragments();
+        checkEulaAccepted();
         //check if the app is launched for the first time
         firstRun = context.getBooleanPreference(RING_ON, FIRST_RUN, true);
         //Service is supposed to be ON, but it may not - due to a crash or newer version of the app.
-        serviceOn = context.getBooleanPreference(RING_ON, SENSOR_SERVICE_ON, false);
         Log.d(TAG,"Activity created. Running for the first time? "+firstRun);
     }
 
@@ -68,7 +63,7 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
 
     @Override
     public boolean isSensorServiceRunning() {
-        return (SensorService.isServiceRunning() || serviceOn);
+        return (SensorService.isServiceRunning() || context.getBooleanPreference(RING_ON, SENSOR_SERVICE_ON, false));
     }
 
     @Override
@@ -77,18 +72,14 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
         MenuItem menuItem = menu.findItem(R.id.ActionItem);
         menuItem.setActionView(R.layout.on_off_switch_layout);
 
-        ToggleButton toggleSwitch = (ToggleButton)menuItem.getActionView().findViewById(R.id.toggleButton);
-        toggleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        toggleBtn = (ToggleButton)menuItem.getActionView().findViewById(R.id.toggleButton);
+        toggleBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 toggleRingerService(isChecked);
             }
         });
-        if (firstRun){
-            toggleSwitch.setChecked(true);
-        }else{
-            toggleSwitch.setChecked(isSensorServiceRunning());
-        }
+        toggleBtn.setChecked(isSensorServiceRunning());
         return true;
     }
 
@@ -107,10 +98,17 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
     @Override
     protected void onResume(){
         super.onResume();
-        if (firstRun) {
-            context.setBooleanPreference(RING_ON, FIRST_RUN, false);
-        }
-        new Disclaimer(this).show();
+    }
+
+    private void addSettingFragments() {
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.FaceUpSettingFrame, SettingsFragment.newInstance(DevicePosition.FACE_UP.name()));
+        Log.d(TAG, "Fragment " + DevicePosition.FACE_UP.name() + " added");
+        fragmentTransaction.add(R.id.FaceDownSettingFrame, SettingsFragment.newInstance(DevicePosition.FACE_DOWN.name()));
+        Log.d(TAG,"Fragment "+ DevicePosition.FACE_DOWN.name()+" added");
+        fragmentTransaction.add(R.id.InPocketSettingFrame, SettingsFragment.newInstance(DevicePosition.IN_POCKET.name()));
+        Log.d(TAG,"Fragment "+ DevicePosition.IN_POCKET.name()+" added");
+        fragmentTransaction.commit();
     }
 
     private void toggleRingerService(boolean isChecked) {
@@ -150,4 +148,55 @@ public class RingONActivity extends Activity implements SettingsFragment.OnFragm
         this.stopService(intent);
         Log.i(TAG, "Service Stopped");
     }
+
+    //EULA stuff below
+
+    private void checkEulaAccepted() {
+        PackageInfo versionInfo = getPackageInfo();
+        // the eulaKey changes every time you increment the version number in the AndroidManifest.xml
+        final String eulaKey = "eula_" + versionInfo.versionCode;
+        eulaHasBeenShown = context.getBooleanPreference(RING_ON, eulaKey, false);
+        if(!eulaHasBeenShown) {
+            showEula(versionInfo, eulaKey);
+        }
+    }
+
+    private PackageInfo getPackageInfo() {
+        PackageInfo pi = null;
+        try {
+            pi = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_ACTIVITIES);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return pi;
+    }
+
+    private void showEula(PackageInfo versionInfo, final String eulaKey) {
+            String title = getString(R.string.app_name) + " v" + versionInfo.versionName;
+            String message = getString(R.string.app_updates) + "\n\n" + getString(R.string.eula);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                    .setTitle(title)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            context.setBooleanPreference(RING_ON,eulaKey,true);
+                            context.setBooleanPreference(RING_ON, FIRST_RUN, false);
+                            toggleBtn.setChecked(true);
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, new Dialog.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+
+                    });
+            builder.create().show();
+    }
+
 }
