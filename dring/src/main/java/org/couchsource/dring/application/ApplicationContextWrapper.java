@@ -37,7 +37,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * Serves up telephony Service
      * @return {@link android.telephony.TelephonyManager}
      */
-    public TelephonyManager getTelephonyService() {
+    public final TelephonyManager getTelephonyService() {
         return (TelephonyManager)
                 getSystemService(Context.TELEPHONY_SERVICE);
     }
@@ -46,7 +46,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * Returns device SensorService
      * @return {@link android.hardware.SensorManager}
      */
-    public SensorManager getSensorService() {
+    public final SensorManager getSensorService() {
         return (SensorManager) getSystemService(SENSOR_SERVICE);
     }
 
@@ -54,7 +54,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * Gets Audio Service
      * @return {@link android.media.AudioManager}
      */
-    public AudioManager getAudioService() {
+    public final AudioManager getAudioService() {
         return (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     }
 
@@ -62,7 +62,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * Gets vibration service
      * @return {@link android.os.Vibrator}
      */
-    public Vibrator getVibratorService() {
+    public final Vibrator getVibratorService() {
         return (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -75,7 +75,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * @return boolean
      * @throws {@link java.lang.IllegalArgumentException} if prefName or key are empty.
      */
-    public boolean getBooleanPreference(String prefName, String key, boolean defaultVal) {
+    public final boolean getBooleanPreference(String prefName, String key, boolean defaultVal) {
         if (TextUtils.isEmpty(prefName) || TextUtils.isEmpty(key)){
             throw new IllegalArgumentException("prefName or key cannot be empty.");
         }
@@ -92,7 +92,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * @return float
      * @throws {@link java.lang.IllegalArgumentException} if prefName or key are empty.
      */
-    public float getFloatPreference(String prefName, String key, float defaultVal) {
+    public final float getFloatPreference(String prefName, String key, float defaultVal) {
         if (TextUtils.isEmpty(prefName) || TextUtils.isEmpty(key)){
             throw new IllegalArgumentException("prefName or key cannot be empty.");
         }
@@ -107,7 +107,7 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * @param key required preference key
      * @param value boolean value to be set.
      */
-    public void setBooleanPreference(String prefName, String key, boolean value){
+    public final void setBooleanPreference(String prefName, String key, boolean value){
         if (TextUtils.isEmpty(prefName) || TextUtils.isEmpty(key)){
             return;
         }
@@ -123,13 +123,22 @@ public class ApplicationContextWrapper extends ContextWrapper {
      * @param key required preference key
      * @param value float value to be set.
      */
-    public void setFloatPreference(String prefName, String key, float value){
+    public final void setFloatPreference(String prefName, String key, float value){
         if (TextUtils.isEmpty(prefName) || TextUtils.isEmpty(key)){
             return;
         }
         SharedPreferences.Editor editor = getSharedPreferences(prefName, Context.MODE_PRIVATE).edit();
         editor.putFloat(key, value);
         editor.apply();
+    }
+
+    /**
+     * Is device ringing right now?
+     * @return boolean
+     */
+    public boolean isDeviceRinging(){
+        TelephonyManager telephonyManager = getTelephonyService();
+        return (telephonyManager.getCallState() == TelephonyManager.CALL_STATE_RINGING);
     }
 
 }
