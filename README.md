@@ -18,7 +18,7 @@ Note: "Vibrate on Ring" option doesn't change the device setting. For this featu
 1.0.0
 
 ### Development
-Want to contribute? send an email at [couchcource@googlegroups.com] with the details before sending a pull request.
+Want to contribute? send an email at [couchsource@googlegroups.com] with the details before sending a pull request.
 
 ### Todos
 
@@ -28,4 +28,4 @@ Want to contribute? send an email at [couchcource@googlegroups.com] with the det
 
 
 [RingON for Android]: https://play.google.com/store/apps/details?id=org.couchsource.dring
-[couchcource@googlegroups.com]: mailto:couchcource@googlegroups.com
+[couchsource@googlegroups.com]: mailto:couchsource@googlegroups.com
