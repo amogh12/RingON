@@ -27,5 +27,5 @@ Want to contribute? send an email at [couchcource@googlegroups.com] with the det
  - (Any other suggestions are welcome)
 
 
-[RingON for Android]: http://google.com
+[RingON for Android]: https://play.google.com/store/apps/details?id=org.couchsource.dring
 [couchcource@googlegroups.com]: mailto:couchcource@googlegroups.com
