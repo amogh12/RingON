@@ -1,6 +1,6 @@
 # RingON for Android
 
-[RingON for Android] is a free and open source utility app that lets you set your phone ringer volume dynamically based on your device position. It uses your phone sensors to detect three positions for your device -
+[RingON for Android] is a free and open source utility app that uses your device sensors to detect the position of your phone and lets you set your phone ringer dynamically. It detects three positions for your device -
 
 - Phone laying flat with screen FACING UP
 - Phone laying flat with screen FACING DOWN
