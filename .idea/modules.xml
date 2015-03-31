@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Dring.iml" filepath="$PROJECT_DIR$/Dring.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RingON.iml" filepath="$PROJECT_DIR$/RingON.iml" />
       <module fileurl="file://$PROJECT_DIR$/dring/dring.iml" filepath="$PROJECT_DIR$/dring/dring.iml" />
     </modules>
   </component>
